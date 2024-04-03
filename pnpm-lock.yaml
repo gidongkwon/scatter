@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@rescript/core':
+    specifier: ^1.1.0
+    version: 1.1.0(rescript@11.0.1)
   next:
     specifier: 14.1.4
     version: 14.1.4(react-dom@18.2.0)(react@18.2.0)
@@ -14,6 +17,9 @@ dependencies:
   react-dom:
     specifier: ^18
     version: 18.2.0(react@18.2.0)
+  rescript:
+    specifier: ^11.0.1
+    version: 11.0.1
 
 devDependencies:
   '@types/node':
@@ -236,6 +242,14 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@rescript/core@1.1.0(rescript@11.0.1):
+    resolution: {integrity: sha512-pz/CL8+9hBUTeMpUouvZohNsa5rqIwurlXoa1CZWN0ZKuWjMVjaoQ3V+0NB72J/QBbs6/8W82VABKBaDn3fGCA==}
+    peerDependencies:
+      rescript: '>=11.0.0 || ^11.1.0-rc.2'
+    dependencies:
+      rescript: 11.0.1
+    dev: false
 
   /@rushstack/eslint-patch@1.9.0:
     resolution: {integrity: sha512-AAWymnpvHbGty1BmgbdfbqQDboXs6xN6h2yAacO4yKVyyUUBnpYkp+P9jjPrV9zrAGw7JVVriRtGOHPInnfjZQ==}
@@ -2026,6 +2040,13 @@ packages:
       es-errors: 1.3.0
       set-function-name: 2.0.2
     dev: true
+
+  /rescript@11.0.1:
+    resolution: {integrity: sha512-7T4PRp/d0+CBNnY6PYKffFqo9tGZlvnZpboF/n+8SKS+JZ6VvXJO7W538VPZXf3EYx1COGAWWvkF9e/HgSAqHg==}
+    engines: {node: '>=10'}
+    hasBin: true
+    requiresBuild: true
+    dev: false
 
   /resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
