@@ -45,14 +45,14 @@ export function createProgram(
 }
 
 const defaultShaderType = [
-  "VERTEX_SHADER",
-  "FRAGMENT_SHADER",
+  'VERTEX_SHADER',
+  'FRAGMENT_SHADER',
 ] as const;
 
 function createShader(gl: WebGL2RenderingContext, type: number, source: string) {
   const shader = gl.createShader(type);
   if (shader == null) {
-    console.log("createShader() failed.");
+    console.log('createShader() failed.');
     return;
   }
   gl.shaderSource(shader, source);

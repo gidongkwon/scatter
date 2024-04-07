@@ -1,6 +1,8 @@
+'use client';
+
 import { useEffect, useRef } from "react";
 import styles from "./page.module.css";
-import { Engine } from "@/engine/engine";
+import { Scatter } from "@/engine/scatter";
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -10,7 +12,7 @@ export default function Home() {
       return;
     }
 
-    const engine = new Engine(canvasRef.current);
+    const scatter = new Scatter(canvasRef.current);
   }, [canvasRef]);
 
   return (
