@@ -34,10 +34,17 @@ export class Scatter {
 
   private sprites: Sprite[];
 
-  private then: number = 0;
+  private _then = 0;
+  private _frameTimes: number[] = [];
+  private _frameCursor = 0;
+  private _frameCounts = 0;
+  private _framesToAverage = 20;
+  private _totalFPS = 0;
+
 
   constructor(
-    public canvas: HTMLCanvasElement
+    public canvas: HTMLCanvasElement,
+    public fpsElement: HTMLSpanElement
   ) {
     const context = canvas.getContext('webgl2');
     if (!context) {
@@ -110,8 +117,20 @@ export class Scatter {
 
   step: FrameRequestCallback = (time) => {
     const now = time / 1000;
-    const deltaTime = Math.min(0.1, now - this.then);
-    this.then = now;
+    const deltaTime = Math.min(0.1, now - this._then);
+    this._then = now;
+
+    const fps = 1 / deltaTime;
+    
+    this._totalFPS += fps - (this._frameTimes[this._frameCursor] ?? 0);
+    this._frameTimes[this._frameCursor] = fps;
+    this._frameCursor++;
+    this._frameCounts = Math.max(this._frameCounts, this._frameCursor);
+    this._frameCursor %= this._framesToAverage;
+    const averageFPS = this._totalFPS / this._frameCounts;
+    
+    this.fpsElement.textContent = `FPS: ${(averageFPS).toFixed(1)}`;
+    
 
     this.update(deltaTime);
     this.render();
