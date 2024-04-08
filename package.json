@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@rescript/core": "^1.1.0",
+    "gl-matrix": "4.0.0-beta.1",
     "next": "14.1.4",
     "react": "^18",
     "react-dom": "^18",
@@ -24,5 +25,10 @@
     "eslint": "^8",
     "eslint-config-next": "14.1.4",
     "typescript": "^5"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "gl-matrix@4.0.0-beta.1": "patches/gl-matrix@4.0.0-beta.1.patch"
+    }
   }
 }

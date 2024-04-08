@@ -4,10 +4,18 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  gl-matrix@4.0.0-beta.1:
+    hash: o7yjeb5mjbaq4cuqf4wd2pxwey
+    path: patches/gl-matrix@4.0.0-beta.1.patch
+
 dependencies:
   '@rescript/core':
     specifier: ^1.1.0
     version: 1.1.0(rescript@11.0.1)
+  gl-matrix:
+    specifier: 4.0.0-beta.1
+    version: 4.0.0-beta.1(patch_hash=o7yjeb5mjbaq4cuqf4wd2pxwey)
   next:
     specifier: 14.1.4
     version: 14.1.4(react-dom@18.2.0)(react@18.2.0)
@@ -1270,6 +1278,11 @@ packages:
     dependencies:
       resolve-pkg-maps: 1.0.0
     dev: true
+
+  /gl-matrix@4.0.0-beta.1(patch_hash=o7yjeb5mjbaq4cuqf4wd2pxwey):
+    resolution: {integrity: sha512-T46Kej6rIIASFFRtUj6CmsWutu8XHHccdPwAfwkJrr4MkOsKKaQprSTjMhUGuVVmqN3iJO9CwYX1DjACr2Wn6g==}
+    dev: false
+    patched: true
 
   /glob-parent@5.1.2:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}

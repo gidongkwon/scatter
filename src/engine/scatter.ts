@@ -1,7 +1,7 @@
 import { Assets, TextureInfo } from "./assets";
 import { createProgramFromSources } from "./gl";
-import { Matrix4 } from "./matrix";
 import { fragment, vertex } from "./shader";
+import { Mat4 } from "gl-matrix";
 
 interface Sprite {
   x: number;
@@ -203,27 +203,31 @@ export class Scatter {
     this.gl.uniform1i(this.textureUniformLocation, textureUnit);
     this.gl.activeTexture(this.gl.TEXTURE0 + textureUnit);
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+
+    let matrix = Mat4.create();
+    Mat4.orthoNO(matrix, 0, this.gl.canvas.width, this.gl.canvas.height, 0, -1, 1);
     
-    let matrix = Matrix4.orthographic(0, this.gl.canvas.width, this.gl.canvas.height, 0, -1, 1);
+    // let matrix = Matrix4.orthographic(0, this.gl.canvas.width, this.gl.canvas.height, 0, -1, 1);
 
     // (dstX, dstY)로 이동
-    matrix = Matrix4.translate(matrix, dstX, dstY, 0);
+    matrix.translate([dstX, dstY, 0]);
 
     // (0~1, 0~1)의 texture space에서 (0~w, 0~h)의 pixel space로 변환
-    matrix = Matrix4.scale(matrix, dstWidth ?? textureWidth, dstHeight ?? textureHeight, 1);
+    matrix.scale([dstWidth ?? textureWidth, dstHeight ?? textureHeight, 1]);
     
     // matrix 적용
     this.gl.uniformMatrix4fv(this.matrixUniformLocation, false, matrix);
 
-    let textureMatrix = Matrix4.scaling(1 / textureWidth, 1 / textureHeight, 1);
+    let textureMatrix = Mat4.create();
+    Mat4.fromScaling(textureMatrix, [1 / textureWidth, 1 / textureHeight, 1]);
     const halfWidth = textureWidth * 0.5;
     const halfHeight = textureHeight * 0.5;
-    textureMatrix = Matrix4.translate(textureMatrix, halfWidth, halfHeight, 0);
-    textureMatrix = Matrix4.rotateZ(textureMatrix, srcRotation ?? 0);
-    textureMatrix = Matrix4.translate(textureMatrix, -halfWidth, -halfHeight, 0);
+    textureMatrix.translate([halfWidth, halfHeight, 0]);
+    textureMatrix.rotateZ(srcRotation ?? 0);
+    textureMatrix.translate([-halfWidth, -halfHeight, 0]);
 
-    textureMatrix = Matrix4.translate(textureMatrix, srcX ?? 0, srcY ?? 0, 0);
-    textureMatrix = Matrix4.scale(textureMatrix, srcWidth ?? textureWidth, srcHeight ?? textureHeight, 1);
+    textureMatrix.translate([srcX ?? 0, srcY ?? 0, 0]);
+    textureMatrix.scale([srcWidth ?? textureWidth, srcHeight ?? textureHeight, 1]);
 
     this.gl.uniformMatrix4fv(this.textureMatrixUniformLocation, false, textureMatrix);
 

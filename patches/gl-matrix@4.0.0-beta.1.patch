@@ -1,0 +1,12 @@
+diff --git a/package.json b/package.json
+index df30618e8cde280ad0a1fa2af605539f14c3110c..413c1fac71b155c84052a37c9bd1e7234aa18093 100644
+--- a/package.json
++++ b/package.json
+@@ -27,6 +27,7 @@
+   "files": [
+     "dist/**"
+   ],
++  "module": "dist/esm/index.js",
+   "scripts": {
+     "build": "tsc",
+     "build-docs": "typedoc src/index.ts",
