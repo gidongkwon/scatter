@@ -1,5 +1,5 @@
 {
-  "name": "your-project-name",
+  "name": "scatter",
   "sources": [
     {
       "dir": "src",
@@ -18,5 +18,10 @@
   ],
   "bsc-flags": [
     "-open RescriptCore"
-  ]
+  ],
+  "gentypeconfig": {
+    "module": "esmodule",
+    "moduleResolution": "bundler",
+    "generatedFileExtension": ".gen.tsx"
+  }
 }

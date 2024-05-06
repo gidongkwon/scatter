@@ -2,6 +2,8 @@ import { Assets, TextureInfo } from "./assets";
 import { createProgramFromSources } from "./gl";
 import { fragment, vertex } from "./shader";
 import { Mat4 } from "gl-matrix";
+import * as World from "./ecs/World.gen.tsx";
+import * as System from "./ecs/System.gen.tsx";
 
 interface Sprite {
   x: number;
@@ -40,6 +42,7 @@ export class Scatter {
   private _frameCounts = 0;
   private _framesToAverage = 20;
   private _totalFPS = 0;
+  private _world = World.make();
 
 
   constructor(
@@ -112,6 +115,30 @@ export class Scatter {
       })
     }
 
+    World.registerSystem(this._world, "Update", (world) => {
+      const speed = 120;
+      const deltaTime = world.dt;
+      console.log(deltaTime)
+
+      for (const sprite of this.sprites) {
+        sprite.x += speed * sprite.dx * deltaTime;
+        sprite.y += speed * sprite.dy * deltaTime;
+
+        if (sprite.x < 0) {
+          sprite.dx = 1
+        }
+        if (sprite.x + sprite.textureInfo.width * sprite.scaleX > this.gl.canvas.width) {
+          sprite.dx = -1;
+        }
+        if (sprite.y < 0) {
+          sprite.dy = 1;
+        }
+        if (sprite.y + sprite.textureInfo.height * sprite.scaleY > this.gl.canvas.height) {
+          sprite.dy = -1;
+        }
+      }
+    });
+
     requestAnimationFrame(this.step);
   }
 
@@ -129,8 +156,7 @@ export class Scatter {
     this._frameCursor %= this._framesToAverage;
     const averageFPS = this._totalFPS / this._frameCounts;
     
-    this.fpsElement.textContent = `FPS: ${(averageFPS).toFixed(1)}`;
-    
+    this.fpsElement.textContent = `FPS: ${(averageFPS).toFixed(1)}`;    
 
     this.update(deltaTime);
     this.render();
@@ -139,25 +165,7 @@ export class Scatter {
   }
 
   update = (deltaTime: number) => {
-    const speed = 120;
-
-    for (const sprite of this.sprites) {
-      sprite.x += speed * sprite.dx * deltaTime;
-      sprite.y += speed * sprite.dy * deltaTime;
-
-      if (sprite.x < 0) {
-        sprite.dx = 1
-      }
-      if (sprite.x + sprite.textureInfo.width * sprite.scaleX > this.gl.canvas.width) {
-        sprite.dx = -1;
-      }
-      if (sprite.y < 0) {
-        sprite.dy = 1;
-      }
-      if (sprite.y + sprite.textureInfo.height * sprite.scaleY > this.gl.canvas.height) {
-        sprite.dy = -1;
-      }
-    }
+    World.update(this._world, deltaTime);
   }
 
   render = () => {
@@ -186,6 +194,8 @@ export class Scatter {
         // sprite.rotation
         )
     }
+
+    World.render(this._world);
   }
 
   drawImage = (
