@@ -2,6 +2,9 @@ import { Assets, TextureInfo } from "./assets";
 import { createProgramFromSources } from "./gl";
 import { fragment, vertex } from "./shader";
 import { Mat4 } from "gl-matrix";
+import * as World from "./ecs/World.gen.tsx";
+import * as Query from "./ecs/Query.gen.tsx";
+import * as System from "./ecs/System.gen.tsx";
 
 interface Sprite {
   x: number;
@@ -40,13 +43,14 @@ export class Scatter {
   private _frameCounts = 0;
   private _framesToAverage = 20;
   private _totalFPS = 0;
+  world = World.make();
 
 
   constructor(
     public canvas: HTMLCanvasElement,
     public fpsElement: HTMLSpanElement
   ) {
-    const context = canvas.getContext('webgl2');
+    const context = canvas.getContext('webgl2', { alpha: false });
     if (!context) {
       throw new Error('WebGL2 is not available.');
     }
@@ -90,16 +94,24 @@ export class Scatter {
     gl.enableVertexAttribArray(texCoordAttribLocation);
     gl.vertexAttribPointer(texCoordAttribLocation, 2, gl.FLOAT, false, 0, 0);
 
-    const texture = this.assets.loadImage('http://localhost:3000/leaves.jpg');
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+    const textures = [
+      this.assets.loadImage('http://localhost:3000/shooter/playerShip1_blue.png'),
+      this.assets.loadImage('http://localhost:3000/shooter/playerShip2_green.png'),
+      this.assets.loadImage('http://localhost:3000/shooter/playerShip3_red.png'),
+    ];
 
     this.sprites = [];
-    for (let i = 0; i < 10000; i++) {
-      const scale = Math.random() * 0.1 + 0.1;
+    for (let i = 0; i < 3000; i++) {
+      const scale = Math.random() * 0.5 + 0.4;
       this.sprites.push({
         x: Math.random() * gl.canvas.width,
         y: Math.random() * gl.canvas.height,
-        dx: Math.random() * 0.5 ? -1 : 1,
-        dy: Math.random() * 0.5 ? -1 : 1,
+        dx: Math.random() > 0.5 ? -1 : 1,
+        dy: Math.random() > 0.5 ? -1 : 1,
         scaleX: scale,
         scaleY: scale,
         offX: 0,
@@ -108,9 +120,34 @@ export class Scatter {
         deltaRotation: (0.5 + Math.random() * 0.5) * (Math.random() > 0.5 ? -1 : 1),
         width: 1,
         height: 1,
-        textureInfo: texture,
+        textureInfo: textures[Math.random() * 3 | 0],
       })
     }
+
+    (this.world as any).sprites = this.sprites;
+    (this.world as any).gl = this.gl;
+
+    World.registerSystem(this.world, "Render", () => {
+      for (const sprite of this.sprites) {
+        const dstX = sprite.x;
+        const dstY = sprite.y;
+        const dstWidth = sprite.textureInfo.width * sprite.scaleX;
+        const dstHeight = sprite.textureInfo.height * sprite.scaleY;
+        const srcX = sprite.textureInfo.width * sprite.offX;
+        const srcY = sprite.textureInfo.height * sprite.offY;
+        const srcWidth = sprite.textureInfo.width * sprite.width;
+        const srcHeight = sprite.textureInfo.height * sprite.height;
+  
+        this.drawImage(
+          sprite.textureInfo.texture,
+          sprite.textureInfo.width,
+          sprite.textureInfo.height,
+          dstX, dstY, dstWidth, dstHeight,
+          srcX, srcY, srcWidth, srcHeight,
+          // sprite.rotation
+          )
+      }
+    })
 
     requestAnimationFrame(this.step);
   }
@@ -129,8 +166,7 @@ export class Scatter {
     this._frameCursor %= this._framesToAverage;
     const averageFPS = this._totalFPS / this._frameCounts;
     
-    this.fpsElement.textContent = `FPS: ${(averageFPS).toFixed(1)}`;
-    
+    this.fpsElement.textContent = `FPS: ${(averageFPS).toFixed(1)}`;    
 
     this.update(deltaTime);
     this.render();
@@ -139,53 +175,17 @@ export class Scatter {
   }
 
   update = (deltaTime: number) => {
-    const speed = 120;
-
-    for (const sprite of this.sprites) {
-      sprite.x += speed * sprite.dx * deltaTime;
-      sprite.y += speed * sprite.dy * deltaTime;
-
-      if (sprite.x < 0) {
-        sprite.dx = 1
-      }
-      if (sprite.x + sprite.textureInfo.width * sprite.scaleX > this.gl.canvas.width) {
-        sprite.dx = -1;
-      }
-      if (sprite.y < 0) {
-        sprite.dy = 1;
-      }
-      if (sprite.y + sprite.textureInfo.height * sprite.scaleY > this.gl.canvas.height) {
-        sprite.dy = -1;
-      }
-    }
+    World.update(this.world, deltaTime);
   }
 
   render = () => {
     this.resizeCanvasToDisplaySize(this.gl.canvas as HTMLCanvasElement);
 
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-    this.gl.clearColor(0, 0, 0, 0);
+    this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
     
-    for (const sprite of this.sprites) {
-      const dstX = sprite.x;
-      const dstY = sprite.y;
-      const dstWidth = sprite.textureInfo.width * sprite.scaleX;
-      const dstHeight = sprite.textureInfo.height * sprite.scaleY;
-      const srcX = sprite.textureInfo.width * sprite.offX;
-      const srcY = sprite.textureInfo.height * sprite.offY;
-      const srcWidth = sprite.textureInfo.width * sprite.width;
-      const srcHeight = sprite.textureInfo.height * sprite.height;
-
-      this.drawImage(
-        sprite.textureInfo.texture,
-        sprite.textureInfo.width,
-        sprite.textureInfo.height,
-        dstX, dstY, dstWidth, dstHeight,
-        srcX, srcY, srcWidth, srcHeight,
-        // sprite.rotation
-        )
-    }
+    World.render(this.world);
   }
 
   drawImage = (

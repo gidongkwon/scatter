@@ -1,5 +1,5 @@
 {
-  "name": "your-project-name",
+  "name": "scatter",
   "sources": [
     {
       "dir": "src",
@@ -8,15 +8,21 @@
   ],
   "package-specs": [
     {
-      "module": "es6",
+      "module": "esmodule",
       "in-source": true
     }
   ],
   "suffix": ".res.js",
   "bs-dependencies": [
-    "@rescript/core"
+    "@rescript/core",
+    "rescript-webapi"
   ],
   "bsc-flags": [
     "-open RescriptCore"
-  ]
+  ],
+  "gentypeconfig": {
+    "module": "esmodule",
+    "moduleResolution": "bundler",
+    "generatedFileExtension": ".gen.tsx"
+  }
 }

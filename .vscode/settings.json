@@ -1,7 +1,7 @@
 {
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
-    "*.res": "${capture}.mjs, ${capture}.js, ${capture}.cmi, ${capture}.cmt, ${capture}.cmj",
+    "*.res": "${capture}.mjs, ${capture}.res.js, ${capture}.gen.tsx, ${capture}.cmi, ${capture}.cmt, ${capture}.cmj",
     "*.resi": "${capture}.res"
   },
 }

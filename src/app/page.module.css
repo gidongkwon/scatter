@@ -1,6 +1,8 @@
 .main {
   position: relative;
   margin: 20px;
+  display: flex;
+  gap: 20px;
 }
 
 .fps {
@@ -9,4 +11,12 @@
   background-color: black;
   color: white;
   padding: 8px;
+}
+
+.canvas {
+  flex: 3
+}
+
+.sidebar {
+  flex: 1;
 }
