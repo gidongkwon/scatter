@@ -1,4 +1,4 @@
-import { run, bench, group } from 'mitata';
+import { bench, group, run } from "mitata";
 
 // Component types
 const POSITION = 1;
@@ -15,18 +15,25 @@ function random(min, max) {
 // Entity creation functions
 function createEntityAoS(id, componentTypes) {
   const entity = { id, componentTypes };
-  if (componentTypes.includes(POSITION)) entity.position = { x: random(0, 1000), y: random(0, 1000) };
-  if (componentTypes.includes(VELOCITY)) entity.velocity = { x: random(-10, 10), y: random(-10, 10) };
+  if (componentTypes.includes(POSITION))
+    entity.position = { x: random(0, 1000), y: random(0, 1000) };
+  if (componentTypes.includes(VELOCITY))
+    entity.velocity = { x: random(-10, 10), y: random(-10, 10) };
   if (componentTypes.includes(HEALTH)) entity.health = random(50, 100);
-  if (componentTypes.includes(RENDER)) entity.render = { sprite: Math.floor(random(1, 10)) };
-  if (componentTypes.includes(AI)) entity.ai = { state: Math.floor(random(1, 5)) };
+  if (componentTypes.includes(RENDER))
+    entity.render = { sprite: Math.floor(random(1, 10)) };
+  if (componentTypes.includes(AI))
+    entity.ai = { state: Math.floor(random(1, 5)) };
   return entity;
 }
 
 // System update functions
 function updatePositionAoS(entities, dt) {
-  for (let entity of entities) {
-    if (entity.componentTypes.includes(POSITION) && entity.componentTypes.includes(VELOCITY)) {
+  for (const entity of entities) {
+    if (
+      entity.componentTypes.includes(POSITION) &&
+      entity.componentTypes.includes(VELOCITY)
+    ) {
       entity.position.x += entity.velocity.x * dt;
       entity.position.y += entity.velocity.y * dt;
     }
@@ -34,18 +41,20 @@ function updatePositionAoS(entities, dt) {
 }
 
 function updateHealthAoS(entities) {
-  for (let entity of entities) {
+  for (const entity of entities) {
     if (entity.componentTypes.includes(HEALTH)) {
       entity.health -= random(0, 0.1);
       if (entity.health <= 0) {
-        entity.componentTypes = entity.componentTypes.filter(c => c !== HEALTH);
+        entity.componentTypes = entity.componentTypes.filter(
+          (c) => c !== HEALTH,
+        );
       }
     }
   }
 }
 
 function updateAIAoS(entities, dt) {
-  for (let entity of entities) {
+  for (const entity of entities) {
     if (entity.componentTypes.includes(AI)) {
       entity.ai.state = Math.floor(random(1, 5));
       if (entity.componentTypes.includes(VELOCITY)) {
@@ -58,7 +67,10 @@ function updateAIAoS(entities, dt) {
 
 function updatePositionSoA(entityData, dt) {
   for (let i = 0; i < entityData.ids.length; i++) {
-    if (entityData.componentTypes[i].includes(POSITION) && entityData.componentTypes[i].includes(VELOCITY)) {
+    if (
+      entityData.componentTypes[i].includes(POSITION) &&
+      entityData.componentTypes[i].includes(VELOCITY)
+    ) {
       entityData.positionX[i] += entityData.velocityX[i] * dt;
       entityData.positionY[i] += entityData.velocityY[i] * dt;
     }
@@ -70,7 +82,9 @@ function updateHealthSoA(entityData) {
     if (entityData.componentTypes[i].includes(HEALTH)) {
       entityData.health[i] -= random(0, 0.1);
       if (entityData.health[i] <= 0) {
-        entityData.componentTypes[i] = entityData.componentTypes[i].filter(c => c !== HEALTH);
+        entityData.componentTypes[i] = entityData.componentTypes[i].filter(
+          (c) => c !== HEALTH,
+        );
       }
     }
   }
@@ -92,7 +106,9 @@ function updateAISoA(entityData, dt) {
 function setupAoS(entityCount) {
   const entities = new Array(entityCount);
   for (let i = 0; i < entityCount; i++) {
-    const componentTypes = [POSITION, VELOCITY, HEALTH, RENDER, AI].filter(() => Math.random() > 0.3);
+    const componentTypes = [POSITION, VELOCITY, HEALTH, RENDER, AI].filter(
+      () => Math.random() > 0.3,
+    );
     entities[i] = createEntityAoS(i, componentTypes);
   }
   return entities;
@@ -108,10 +124,12 @@ function setupSoA(entityCount) {
     velocityY: new Float32Array(entityCount),
     health: new Float32Array(entityCount),
     renderSprite: new Uint8Array(entityCount),
-    aiState: new Uint8Array(entityCount)
+    aiState: new Uint8Array(entityCount),
   };
   for (let i = 0; i < entityCount; i++) {
-    const componentTypes = [POSITION, VELOCITY, HEALTH, RENDER, AI].filter(() => Math.random() > 0.3);
+    const componentTypes = [POSITION, VELOCITY, HEALTH, RENDER, AI].filter(
+      () => Math.random() > 0.3,
+    );
     entities.ids[i] = i;
     entities.componentTypes[i] = componentTypes;
     if (componentTypes.includes(POSITION)) {
@@ -145,10 +163,12 @@ function setupSoANonTyped(entityCount) {
     velocityY: new Array(entityCount),
     health: new Array(entityCount),
     renderSprite: new Array(entityCount),
-    aiState: new Array(entityCount)
+    aiState: new Array(entityCount),
   };
   for (let i = 0; i < entityCount; i++) {
-    const componentTypes = [POSITION, VELOCITY, HEALTH, RENDER, AI].filter(() => Math.random() > 0.3);
+    const componentTypes = [POSITION, VELOCITY, HEALTH, RENDER, AI].filter(
+      () => Math.random() > 0.3,
+    );
     entities.ids[i] = i;
     entities.componentTypes[i] = componentTypes;
     if (componentTypes.includes(POSITION)) {
@@ -174,7 +194,7 @@ function setupSoANonTyped(entityCount) {
 
 // Benchmark
 const ENTITY_COUNT = 100000;
-const DT = 1/60;
+const DT = 1 / 60;
 
 const entitiesAoS = setupAoS(ENTITY_COUNT);
 const entitiesSoA = setupSoA(ENTITY_COUNT);
@@ -192,14 +212,14 @@ function runSoAUpdate(entities, dt) {
   updateAISoA(entities, dt);
 }
 
-group('ECS Update Performance with Mixed Components', () => {
-  bench('Array of Structures (AoS)', () => {
+group("ECS Update Performance with Mixed Components", () => {
+  bench("Array of Structures (AoS)", () => {
     runAoSUpdate(entitiesAoS, DT);
   });
-  bench('Structure of Arrays (SoA)', () => {
+  bench("Structure of Arrays (SoA)", () => {
     runSoAUpdate(entitiesSoA, DT);
   });
-  bench('Structure of Arrays on Non-typed Array', () => {
+  bench("Structure of Arrays on Non-typed Array", () => {
     runSoAUpdate(entitiesSoANonTyped, DT);
   });
 });
