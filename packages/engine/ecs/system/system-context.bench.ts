@@ -1,4 +1,4 @@
-import { bench } from "vitest";
+import { bench, describe } from "vitest";
 import { World } from "../world";
 import { SystemContext } from "./system-context";
 
@@ -21,53 +21,57 @@ for (let i = 0; i < 100000; i++) {
   }
 }
 
-bench(
-  "each single system",
-  () => {
-    type Comp = { x: number; y: number };
-    systemContext.each(
-      [A, B, C],
-      (entity, [componentA, componentB, componentC]) => {
-        const a = componentA as Comp;
-        const b = componentB as Comp;
-        const c = componentC as Comp;
-        c.x = a.x + b.x;
-        c.y = a.y + b.y;
-      },
-    );
-  },
-  {
-    iterations: 1000,
-  },
-);
+describe("single system", () => {
+  bench(
+    "each",
+    () => {
+      type Comp = { x: number; y: number };
+      systemContext.each(
+        [A, B, C],
+        (entity, [componentA, componentB, componentC]) => {
+          const a = componentA as Comp;
+          const b = componentB as Comp;
+          const c = componentC as Comp;
+          c.x = a.x + b.x;
+          c.y = a.y + b.y;
+        },
+      );
+    },
+    {
+      iterations: 1000,
+    },
+  );
+});
 
-bench(
-  "each multiple system",
-  () => {
-    type Comp = { x: number; y: number };
-    systemContext.each(
-      [A, B, C],
-      (entity, [componentA, componentB, componentC]) => {
-        const a = componentA as Comp;
-        const b = componentB as Comp;
-        const c = componentC as Comp;
-        c.x = a.x + b.x;
-        c.y = a.y + b.y;
-      },
-    );
+describe("multiple system", () => {
+  bench(
+    "each",
+    () => {
+      type Comp = { x: number; y: number };
+      systemContext.each(
+        [A, B, C],
+        (entity, [componentA, componentB, componentC]) => {
+          const a = componentA as Comp;
+          const b = componentB as Comp;
+          const c = componentC as Comp;
+          c.x = a.x + b.x;
+          c.y = a.y + b.y;
+        },
+      );
 
-    systemContext.each(
-      [A, D, E],
-      (entity, [componentA, componentD, componentE]) => {
-        const a = componentA as Comp;
-        const d = componentD as Comp;
-        const e = componentE as Comp;
-        e.x = a.x * d.x;
-        e.y = a.y * d.y;
-      },
-    );
-  },
-  {
-    iterations: 1000,
-  },
-);
+      systemContext.each(
+        [A, D, E],
+        (entity, [componentA, componentD, componentE]) => {
+          const a = componentA as Comp;
+          const d = componentD as Comp;
+          const e = componentE as Comp;
+          e.x = a.x * d.x;
+          e.y = a.y * d.y;
+        },
+      );
+    },
+    {
+      iterations: 1000,
+    },
+  );
+});
