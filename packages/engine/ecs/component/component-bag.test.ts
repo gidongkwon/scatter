@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
-import { ComponentBag } from "./component-bag";
 import { EntityRegistry } from "../entity/entity-registry";
+import { ComponentBag } from "./component-bag";
 
 test("add/has", () => {
   const entityRegistry = new EntityRegistry();

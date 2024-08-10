@@ -1,4 +1,5 @@
 import { assert } from "../../utils/assert";
+import type { Entity } from "../entity/entity";
 import type { ComponentId } from "./component";
 import { ComponentBag } from "./component-bag";
 
@@ -16,5 +17,15 @@ export class ComponentRegistry {
 
   has = (componentId: ComponentId) => {
     return this.#idToBags.has(componentId);
+  };
+
+  get = (componetId: ComponentId) => {
+    return this.#idToBags.get(componetId);
+  };
+
+  removeEntity = (entity: Entity) => {
+    for (const [_, bag] of this.#idToBags) {
+      bag.remove(entity);
+    }
   };
 }

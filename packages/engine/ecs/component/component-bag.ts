@@ -1,7 +1,7 @@
 import { assert } from "../../utils/assert";
+import { swap } from "../../utils/swap";
 import type { Entity } from "../entity/entity";
 import type { Component } from "./component";
-import { swap } from "../../utils/swap";
 
 export class ComponentBag {
   sparseEntityIndicies: (number | undefined)[] = [];
