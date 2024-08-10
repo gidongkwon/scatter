@@ -3,7 +3,7 @@ import type { Component, ComponentId } from "./component/component";
 import { ComponentRegistry } from "./component/component-registry";
 import type { Entity } from "./entity/entity";
 import { EntityRegistry } from "./entity/entity-registry";
-import type { System } from "./system";
+import type { System } from "./system/system";
 
 export class World {
   components: ComponentRegistry = new ComponentRegistry();
@@ -17,6 +17,10 @@ export class World {
 
   removeEntity = (entity: Entity) => {
     this.components.removeEntity(entity);
+  };
+
+  registerComponent = () => {
+    return this.components.register();
   };
 
   addComponent = (
