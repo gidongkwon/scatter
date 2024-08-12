@@ -71,7 +71,7 @@ export class World {
   };
 
   update = (deltaTime: number) => {
-    this.context._update(deltaTime);
+    this.context._updateDeltaTime(deltaTime);
 
     const systems = this.systems.get("update");
     if (systems != null) {

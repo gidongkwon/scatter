@@ -6,6 +6,8 @@ import { World } from "./ecs/world";
 import { resizeCanvasToDisplaySize } from "./utils/canvas";
 
 export class Engine {
+  initialized = false;
+
   world: World;
   gl: WebGL2RenderingContext;
   assets: Assets;
@@ -37,7 +39,8 @@ export class Engine {
   }
 
   run = () => {
-    this.world.callInitSystems();
+    // Init moved to render due to canvas resize delay.
+    // this.world.callInitSystems();
     return requestAnimationFrame(this.step);
   };
 
@@ -145,6 +148,16 @@ export class Engine {
 
   private render = () => {
     resizeCanvasToDisplaySize(this.gl.canvas as HTMLCanvasElement);
+
+    this.world.context._updateStageSize(
+      this.gl.canvas.width,
+      this.gl.canvas.height,
+    );
+
+    if (!this.initialized) {
+      this.world.callInitSystems();
+      this.initialized = true;
+    }
 
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
     this.gl.clearColor(0, 0, 0, 1);

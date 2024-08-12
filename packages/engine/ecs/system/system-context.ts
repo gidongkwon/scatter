@@ -9,6 +9,8 @@ import type { World } from "../world";
  */
 export class SystemContext {
   deltaTime = 0;
+  stageWidth = 0;
+  stageHeight = 0;
 
   constructor(private world: World) {}
 
@@ -55,7 +57,12 @@ export class SystemContext {
     }
   };
 
-  _update = (deltaTime: number) => {
+  _updateDeltaTime = (deltaTime: number) => {
     this.deltaTime = deltaTime;
+  };
+
+  _updateStageSize = (width: number, height: number) => {
+    this.stageWidth = width;
+    this.stageHeight = height;
   };
 }

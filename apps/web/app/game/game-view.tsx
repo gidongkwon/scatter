@@ -12,17 +12,17 @@ export function GameView() {
       engine.assets.loadImage("/shooter/playerShip3_red.png"),
     ];
 
-    engine.world.addSystem("init", (context) => {
-      for (let i = 0; i < 3000; i++) {
-        const scale = Math.random() * 0.5 + 0.4;
+    // TODO: implement proper id management system or better component design
+    const TransformId = 0;
+    const SpriteId = 1;
 
-        // TODO: implement proper id management system or better component design
-        const TransformId = 0;
-        const SpriteId = 1;
+    engine.world.addSystem("init", (context) => {
+      for (let i = 0; i < 6000; i++) {
+        const scale = Math.random() * 0.5 + 0.4;
         const transform: Transform = {
           position: {
-            x: Math.random() * 500,
-            y: Math.random() * 300,
+            x: Math.random() * context.stageWidth,
+            y: Math.random() * context.stageHeight,
           },
           scale: {
             x: scale,
@@ -39,13 +39,59 @@ export function GameView() {
           [TransformId, transform] as any,
           // biome-ignore lint/suspicious/noExplicitAny: <explanation>
           [SpriteId, sprite] as any,
+          [
+            2,
+            {
+              dx: Math.random() > 0.5 ? -1 : 1,
+              dy: Math.random() > 0.5 ? -1 : 1,
+            },
+          ],
         ]);
       }
+    });
+
+    // test for dxdy
+    const DxDyId = engine.world.registerComponent();
+
+    engine.world.addSystem("update", (context) => {
+      const deltaTime = context.deltaTime;
+      const speed = 120;
+
+      context.each(
+        [TransformId, SpriteId, DxDyId],
+        (_, [rawTransform, rawSprite, rawDxDy]) => {
+          const transform = rawTransform as unknown as Transform;
+          const sprite = rawSprite as unknown as Sprite;
+          const dxdy = rawDxDy as unknown as { dx: number; dy: number };
+          const position = transform.position;
+          position.x += speed * dxdy.dx * deltaTime;
+          position.y += speed * dxdy.dy * deltaTime;
+
+          if (position.x < 0) {
+            dxdy.dx = 1;
+          }
+          if (
+            position.x + sprite.textureInfo.width * transform.scale.x >
+            context.stageWidth
+          ) {
+            dxdy.dx = -1;
+          }
+          if (position.y < 0) {
+            dxdy.dy = 1;
+          }
+          if (
+            position.y + sprite.textureInfo.height * transform.scale.y >
+            context.stageHeight
+          ) {
+            dxdy.dy = -1;
+          }
+        },
+      );
     });
   });
 
   return (
-    <canvas ref={canvasRef} className="flex-1">
+    <canvas ref={canvasRef} className="flex-1 min-w-0">
       No canvas support.
     </canvas>
   );
