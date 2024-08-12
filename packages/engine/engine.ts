@@ -1,5 +1,5 @@
 import { createProgramFromSources } from "./2d/gl";
-import { fragment, type ProgramInfo, vertex } from "./2d/shader";
+import { type ProgramInfo, fragment, vertex } from "./2d/shader";
 import { createSpriteRenderSystem } from "./2d/sprite-render-system";
 import { Assets } from "./assets";
 import { World } from "./ecs/world";
@@ -11,8 +11,8 @@ export class Engine {
   assets: Assets;
 
   // renderer
-  programInfo: ProgramInfo;
-  quadVAO: WebGLVertexArrayObject;
+  programInfo!: ProgramInfo;
+  quadVAO!: WebGLVertexArrayObject;
 
   // fps/time tracking
   private _then = 0;
@@ -35,6 +35,11 @@ export class Engine {
     this.initRenderer();
     this.initDefaultSystems();
   }
+
+  run = () => {
+    this.world.callInitSystems();
+    return requestAnimationFrame(this.step);
+  };
 
   private initRenderer = () => {
     const gl = this.gl;
@@ -114,7 +119,7 @@ export class Engine {
     this.world.addSystem("render", spriteRenderSystem);
   };
 
-  step: FrameRequestCallback = (time) => {
+  private step: FrameRequestCallback = (time) => {
     const now = time / 1000;
     const deltaTime = Math.min(0.1, now - this._then);
     this._then = now;
@@ -134,11 +139,11 @@ export class Engine {
     requestAnimationFrame(this.step);
   };
 
-  update = (deltaTime: number) => {
+  private update = (deltaTime: number) => {
     this.world.update(deltaTime);
   };
 
-  render = () => {
+  private render = () => {
     resizeCanvasToDisplaySize(this.gl.canvas as HTMLCanvasElement);
 
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);

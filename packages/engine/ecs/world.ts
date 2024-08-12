@@ -61,8 +61,17 @@ export class World {
     systems.splice(index);
   };
 
+  callInitSystems = () => {
+    const systems = this.systems.get("init");
+    if (systems != null) {
+      for (const system of systems) {
+        system(this.context);
+      }
+    }
+  };
+
   update = (deltaTime: number) => {
-    this.context.update(deltaTime);
+    this.context._update(deltaTime);
 
     const systems = this.systems.get("update");
     if (systems != null) {

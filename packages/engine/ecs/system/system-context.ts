@@ -48,7 +48,14 @@ export class SystemContext {
     }
   };
 
-  update = (deltaTime: number) => {
+  spawn = (components: [ComponentId, Component][]) => {
+    const entity = this.world.addEntity();
+    for (const idComponent of components) {
+      this.world.addComponent(entity, idComponent[0], idComponent[1]);
+    }
+  };
+
+  _update = (deltaTime: number) => {
     this.deltaTime = deltaTime;
   };
 }

@@ -1,3 +1,16 @@
+export interface ProgramInfo {
+  program: WebGLProgram;
+  attribLocations: {
+    position: number;
+    texCoord: number;
+  };
+  uniformLocations: {
+    matrix: WebGLUniformLocation;
+    texture: WebGLUniformLocation;
+    textureMatrix: WebGLUniformLocation;
+  };
+}
+
 export const vertex = /* glsl */ `#version 300 es
 
 in vec4 a_position;
