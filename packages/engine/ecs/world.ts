@@ -71,4 +71,13 @@ export class World {
       }
     }
   };
+
+  render = () => {
+    const systems = this.systems.get("render");
+    if (systems != null) {
+      for (const system of systems) {
+        system(this.context);
+      }
+    }
+  };
 }

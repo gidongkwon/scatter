@@ -1,8 +1,9 @@
 {
-  "name": "engine",
+  "name": "@scatter/engine",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "type": "module",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -11,5 +12,8 @@
   "license": "ISC",
   "devDependencies": {
     "vitest": "^2.0.5"
+  },
+  "dependencies": {
+    "gl-matrix": "4.0.0-beta.2"
   }
 }
