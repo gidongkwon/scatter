@@ -8,6 +8,8 @@ import type { World } from "../world";
  * instead of passing world object, we pass this context.
  */
 export class SystemContext {
+  deltaTime = 0;
+
   constructor(private world: World) {}
 
   /**
@@ -44,5 +46,9 @@ export class SystemContext {
         );
       }
     }
+  };
+
+  update = (deltaTime: number) => {
+    this.deltaTime = deltaTime;
   };
 }
