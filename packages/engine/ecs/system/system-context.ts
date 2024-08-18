@@ -1,6 +1,7 @@
 import type { Component, ComponentId } from "../component/component";
 import type { Entity } from "../entity/entity";
 import type { World } from "../world";
+import { Keyboard } from "../../input/keyboard";
 
 /**
  * A Context for system update.
@@ -11,6 +12,7 @@ export class SystemContext {
   deltaTime = 0;
   stageWidth = 0;
   stageHeight = 0;
+  keyboard: Keyboard = new Keyboard();
 
   constructor(private world: World) {}
 

@@ -20,6 +20,7 @@ export function useEngine(
     setEngine(engine);
 
     return () => {
+      engine.cleanup();
       cancelAnimationFrame(rafIdRef.current);
     };
   }, [canvasRef.current]);

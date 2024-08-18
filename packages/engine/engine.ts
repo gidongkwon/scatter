@@ -3,6 +3,7 @@ import { type ProgramInfo, fragment, vertex } from "./2d/shader";
 import { createSpriteRenderSystem } from "./2d/sprite-render-system";
 import { Assets } from "./assets";
 import { World } from "./ecs/world";
+import { createKeyboardSystem } from "./input/keyboard";
 import { resizeCanvasToDisplaySize } from "./utils/canvas";
 
 export class Engine {
@@ -42,6 +43,10 @@ export class Engine {
     // Init moved to render due to canvas resize delay.
     // this.world.callInitSystems();
     return requestAnimationFrame(this.step);
+  };
+
+  cleanup = () => {
+    this.world.cleanup();
   };
 
   private initRenderer = () => {
@@ -113,6 +118,8 @@ export class Engine {
   };
 
   private initDefaultSystems = () => {
+    this.world.addSystem("init", createKeyboardSystem(document));
+
     const Transform = this.world.registerComponent();
     const Sprite = this.world.registerComponent();
     const spriteRenderSystem = createSpriteRenderSystem(

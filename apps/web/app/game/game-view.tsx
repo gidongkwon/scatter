@@ -2,6 +2,7 @@ import type { Sprite } from "@scatter/engine/2d/sprite";
 import type { Transform } from "@scatter/engine/2d/transform";
 import { useRef } from "react";
 import { useEngine } from "./use-engine";
+import type { System } from "@scatter/engine";
 
 export function GameView() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -15,79 +16,54 @@ export function GameView() {
     // TODO: implement proper id management system or better component design
     const TransformId = 0;
     const SpriteId = 1;
+    const PlayerId = engine.world.registerComponent();
 
     engine.world.addSystem("init", (context) => {
-      for (let i = 0; i < 6000; i++) {
-        const scale = Math.random() * 0.5 + 0.4;
-        const transform: Transform = {
-          position: {
-            x: Math.random() * context.stageWidth,
-            y: Math.random() * context.stageHeight,
-          },
-          scale: {
-            x: scale,
-            y: scale,
-          },
-        };
-        const sprite: Sprite = {
-          width: 1,
-          height: 1,
-          textureInfo: textures[(Math.random() * 3) | 0],
-        };
-        context.spawn([
-          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-          [TransformId, transform] as any,
-          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-          [SpriteId, sprite] as any,
-          [
-            2,
-            {
-              dx: Math.random() > 0.5 ? -1 : 1,
-              dy: Math.random() > 0.5 ? -1 : 1,
+      context.spawn([
+        [
+          TransformId,
+          {
+            position: {
+              x: 100,
+              y: 100,
             },
-          ],
-        ]);
-      }
+            scale: {
+              x: 1,
+              y: 1,
+            },
+          } satisfies Transform,
+        ],
+        [
+          SpriteId,
+          { textureInfo: textures[0], width: 1, height: 1 } satisfies Sprite,
+        ],
+        [PlayerId, true],
+      ]);
     });
 
-    // test for dxdy
-    const DxDyId = engine.world.registerComponent();
+    const playerMoveSystem: System = (context) => {
+      context.each([TransformId, SpriteId, PlayerId], (_, rawComponents) => {
+        const [transform, sprite] = rawComponents as unknown as [
+          Transform,
+          Sprite,
+        ];
+        const speed = 300;
+        if (context.keyboard.isPressed("ArrowLeft")) {
+          transform.position.x -= speed * context.deltaTime;
+        }
+        if (context.keyboard.isPressed("ArrowRight")) {
+          transform.position.x += speed * context.deltaTime;
+        }
+        if (context.keyboard.isPressed("ArrowUp")) {
+          transform.position.y -= speed * context.deltaTime;
+        }
+        if (context.keyboard.isPressed("ArrowDown")) {
+          transform.position.y += speed * context.deltaTime;
+        }
+      });
+    };
 
-    engine.world.addSystem("update", (context) => {
-      const deltaTime = context.deltaTime;
-      const speed = 120;
-
-      context.each(
-        [TransformId, SpriteId, DxDyId],
-        (_, [rawTransform, rawSprite, rawDxDy]) => {
-          const transform = rawTransform as unknown as Transform;
-          const sprite = rawSprite as unknown as Sprite;
-          const dxdy = rawDxDy as unknown as { dx: number; dy: number };
-          const position = transform.position;
-          position.x += speed * dxdy.dx * deltaTime;
-          position.y += speed * dxdy.dy * deltaTime;
-
-          if (position.x < 0) {
-            dxdy.dx = 1;
-          }
-          if (
-            position.x + sprite.textureInfo.width * transform.scale.x >
-            context.stageWidth
-          ) {
-            dxdy.dx = -1;
-          }
-          if (position.y < 0) {
-            dxdy.dy = 1;
-          }
-          if (
-            position.y + sprite.textureInfo.height * transform.scale.y >
-            context.stageHeight
-          ) {
-            dxdy.dy = -1;
-          }
-        },
-      );
-    });
+    engine.world.addSystem("update", playerMoveSystem);
   });
 
   return (

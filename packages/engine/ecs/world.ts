@@ -3,13 +3,19 @@ import type { Component, ComponentId } from "./component/component";
 import { ComponentRegistry } from "./component/component-registry";
 import type { Entity } from "./entity/entity";
 import { EntityRegistry } from "./entity/entity-registry";
-import type { System, SystemPhase } from "./system/system";
+import type {
+  System,
+  SystemCleanup,
+  SystemPhase,
+  SystemWithEffect,
+} from "./system/system";
 import { SystemContext } from "./system/system-context";
 
 export class World {
   components: ComponentRegistry = new ComponentRegistry();
   entities: EntityRegistry = new EntityRegistry();
-  systems: Map<SystemPhase, System[]> = new Map();
+  systems: Map<SystemPhase, (System | SystemWithEffect)[]> = new Map();
+  cleanups: SystemCleanup[] = [];
   context: SystemContext = new SystemContext(this);
 
   addEntity = () => {
@@ -42,7 +48,7 @@ export class World {
     return this.components.get(componentId)?.has(entity);
   };
 
-  addSystem = (phase: SystemPhase, system: System) => {
+  addSystem = (phase: SystemPhase, system: System | SystemWithEffect) => {
     const existing = this.systems.get(phase) ?? [];
     this.systems.set(phase, [...existing, system]);
   };
@@ -65,7 +71,10 @@ export class World {
     const systems = this.systems.get("init");
     if (systems != null) {
       for (const system of systems) {
-        system(this.context);
+        const maybeCleanup = system(this.context);
+        if (typeof maybeCleanup === "function") {
+          this.cleanups.push(maybeCleanup);
+        }
       }
     }
   };
@@ -87,6 +96,12 @@ export class World {
       for (const system of systems) {
         system(this.context);
       }
+    }
+  };
+
+  cleanup = () => {
+    for (const cleanup of this.cleanups) {
+      cleanup();
     }
   };
 }
