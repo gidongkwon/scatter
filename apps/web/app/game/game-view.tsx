@@ -26,18 +26,16 @@ export function GameView() {
       x: number;
       y: number;
     }
-
     const PlayerId = engine.world.registerComponent();
     interface Player {
       score: number;
     }
-
     const EnemyId = engine.world.registerComponent();
-
     const BulletShooterId = engine.world.registerComponent();
     interface BulletShooter {
       delayTimer: Timer;
     }
+    const RemoveOnOutsideId = engine.world.registerComponent();
 
     engine.world.addSystem("init", (context) => {
       context.spawn([
@@ -132,6 +130,7 @@ export function GameView() {
                   y: 0,
                 } satisfies Velocity,
               ],
+              [RemoveOnOutsideId, true],
             ]);
           }
         },
@@ -213,6 +212,7 @@ export function GameView() {
                 y: 0,
               } satisfies Velocity,
             ],
+            [RemoveOnOutsideId, true],
           ]);
         },
       );
@@ -229,11 +229,32 @@ export function GameView() {
       });
     };
 
+    const clearOutsideObjectSystem: System = (context) => {
+      context.each(
+        [TransformId, SpriteId, RemoveOnOutsideId],
+        (entity, rawComponents) => {
+          const [transform, sprite] = rawComponents as unknown as [
+            Transform,
+            Sprite,
+          ];
+          if (
+            transform.position.x + sprite.textureInfo.width < 0 ||
+            transform.position.x > context.stageWidth ||
+            transform.position.y + sprite.textureInfo.height < 0 ||
+            transform.position.y > context.stageHeight
+          ) {
+            context.despawn(entity);
+          }
+        },
+      );
+    };
+
     engine.world.addSystem("update", playerMoveSystem);
     engine.world.addSystem("update", playerShootSystem);
     engine.world.addSystem("update", enemySpawnSystem);
     engine.world.addSystem("update", enemyShootSystem);
     engine.world.addSystem("update", velocitySystem);
+    engine.world.addSystem("update", clearOutsideObjectSystem);
   });
 
   return (

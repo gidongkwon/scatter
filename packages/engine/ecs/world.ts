@@ -24,6 +24,7 @@ export class World {
   };
 
   removeEntity = (entity: Entity) => {
+    this.entities.remove(entity);
     this.components.removeEntity(entity);
   };
 

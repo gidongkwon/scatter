@@ -1,5 +1,5 @@
 import type { Component, ComponentId } from "../component/component";
-import type { Entity } from "../entity/entity";
+import type { Entity, EntityId } from "../entity/entity";
 import type { World } from "../world";
 import { Keyboard } from "../../input/keyboard";
 
@@ -59,6 +59,10 @@ export class SystemContext {
     for (const idComponent of components) {
       this.world.addComponent(entity, idComponent[0], idComponent[1]);
     }
+  };
+
+  despawn = (entityId: EntityId) => {
+    this.world.removeEntity(entityId);
   };
 
   _updateDeltaTime = (deltaTime: number) => {
