@@ -88,7 +88,7 @@ export function GameView() {
       });
     };
 
-    const playerShooterSystem: System = (context) => {
+    const playerShootSystem: System = (context) => {
       context.each(
         [TransformId, BulletShooterId, PlayerId],
         (_, rawComponents) => {
@@ -102,6 +102,7 @@ export function GameView() {
           }
 
           if (context.keyboard.isPressed("KeyZ")) {
+            bulletShooter.delayTimer.reset();
             context.spawn([
               [
                 SpriteId,
@@ -137,7 +138,7 @@ export function GameView() {
       );
     };
 
-    const timer = new Timer(1, { type: "infinite" });
+    const timer = new Timer(5, { type: "infinite" });
     const enemySpawnSystem: System = (context) => {
       timer.tick(context.deltaTime);
       if (timer.segmentFinished) {
@@ -170,6 +171,53 @@ export function GameView() {
       }
     };
 
+    const enemyShootSystem: System = (context) => {
+      context.each(
+        [TransformId, BulletShooterId, EnemyId],
+        (_, rawComponents) => {
+          const [enemyTransform, bulletShooter] = rawComponents as unknown as [
+            Transform,
+            BulletShooter,
+          ];
+          bulletShooter.delayTimer.tick(context.deltaTime);
+          if (!bulletShooter.delayTimer.finished) {
+            return;
+          }
+          bulletShooter.delayTimer.reset();
+          context.spawn([
+            [
+              SpriteId,
+              {
+                textureInfo: playerBulletTexture,
+                width: 1,
+                height: 1,
+              } satisfies Sprite,
+            ],
+            [
+              TransformId,
+              {
+                position: {
+                  x: enemyTransform.position.x,
+                  y: enemyTransform.position.y,
+                },
+                scale: {
+                  x: 1,
+                  y: 1,
+                },
+              } satisfies Transform,
+            ],
+            [
+              VelocityId,
+              {
+                x: -500,
+                y: 0,
+              } satisfies Velocity,
+            ],
+          ]);
+        },
+      );
+    };
+
     const velocitySystem: System = (context) => {
       context.each([VelocityId, TransformId], (_, rawComponents) => {
         const [velocity, transform] = rawComponents as unknown as [
@@ -182,8 +230,9 @@ export function GameView() {
     };
 
     engine.world.addSystem("update", playerMoveSystem);
-    engine.world.addSystem("update", playerShooterSystem);
+    engine.world.addSystem("update", playerShootSystem);
     engine.world.addSystem("update", enemySpawnSystem);
+    engine.world.addSystem("update", enemyShootSystem);
     engine.world.addSystem("update", velocitySystem);
   });
 
