@@ -46,7 +46,9 @@ export class SystemContext {
       if (hasEveryComponent) {
         callback(
           entity,
-          componentBags.map((bag) => bag.get(entity)),
+          componentIds.map((componentId) =>
+            this.world.components.get(componentId)?.get(entity),
+          ),
         );
       }
     }
