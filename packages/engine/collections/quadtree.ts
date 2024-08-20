@@ -20,6 +20,8 @@ export class Quadtree<TData> {
   constructor(
     public bounds: Rect,
     public capacity: number,
+    public depth = 0,
+    public maxDepth = 4,
   ) {}
 
   tryInsert = (object: BoundsWithData<TData>) => {
@@ -36,7 +38,7 @@ export class Quadtree<TData> {
 
     this.objects.push(object);
 
-    if (this.objects.length > this.capacity) {
+    if (this.objects.length > this.capacity && this.depth < this.maxDepth) {
       this.split();
       // biome-ignore lint/style/noNonNullAssertion: spilt()
       this.subNodes!.topLeft.tryInsert(object);
@@ -60,15 +62,6 @@ export class Quadtree<TData> {
       this.subNodes.topRight.remove(object);
       this.subNodes.bottomLeft.remove(object);
       this.subNodes.bottomRight.remove(object);
-
-      if (
-        this.subNodes.topLeft.objects.length === 0 &&
-        this.subNodes.topRight.objects.length === 0 &&
-        this.subNodes.bottomLeft.objects.length === 0 &&
-        this.subNodes.bottomRight.objects.length === 0
-      ) {
-        this.merge();
-      }
     }
   };
 
@@ -84,6 +77,7 @@ export class Quadtree<TData> {
     const halfHeight = this.bounds.height / 2;
     const centerX = x + halfWidth;
     const centerY = y + halfHeight;
+    const nextDepth = this.depth + 1;
 
     this.subNodes = {
       topLeft: new Quadtree(
@@ -94,6 +88,7 @@ export class Quadtree<TData> {
           height: halfHeight,
         },
         this.capacity,
+        nextDepth,
       ),
       topRight: new Quadtree(
         {
@@ -103,6 +98,7 @@ export class Quadtree<TData> {
           height: halfHeight,
         },
         this.capacity,
+        nextDepth,
       ),
       bottomLeft: new Quadtree(
         {
@@ -112,6 +108,7 @@ export class Quadtree<TData> {
           height: halfHeight,
         },
         this.capacity,
+        nextDepth,
       ),
       bottomRight: new Quadtree(
         {
@@ -121,12 +118,13 @@ export class Quadtree<TData> {
           height: halfHeight,
         },
         this.capacity,
+        nextDepth,
       ),
     };
   };
 
   _uniqueObjects = new Set<BoundsWithData<TData>>();
-  merge = () => {
+  shrink = () => {
     if (this.subNodes == null) {
       return;
     }
@@ -149,14 +147,14 @@ export class Quadtree<TData> {
     this.subNodes = undefined;
   };
 
-  query = (bounds: Rect, out: BoundsWithData<TData>[]) => {
+  query = (bounds: Rect, out: Set<BoundsWithData<TData>>) => {
     if (!intersects(bounds, this.bounds)) {
       return;
     }
 
     for (let i = 0; i < this.objects.length; i++) {
       if (intersects(this.objects[i].bounds, bounds)) {
-        out.push(this.objects[i]);
+        out.add(this.objects[i]);
       }
     }
 
@@ -173,6 +171,26 @@ export class Quadtree<TData> {
       if (intersects(bounds, this.subNodes.bottomRight.bounds)) {
         this.subNodes.bottomRight.query(bounds, out);
       }
+    }
+  };
+
+  shrinkIfNeeded = () => {
+    if (this.subNodes == null) {
+      return;
+    }
+
+    if (
+      this.subNodes.topLeft.objects.length === 0 &&
+      this.subNodes.topRight.objects.length === 0 &&
+      this.subNodes.bottomLeft.objects.length === 0 &&
+      this.subNodes.bottomRight.objects.length === 0
+    ) {
+      this.shrink();
+    } else {
+      this.subNodes.topLeft.shrinkIfNeeded();
+      this.subNodes.topRight.shrinkIfNeeded();
+      this.subNodes.bottomLeft.shrinkIfNeeded();
+      this.subNodes.bottomRight.shrinkIfNeeded();
     }
   };
 }

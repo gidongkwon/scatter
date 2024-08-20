@@ -214,9 +214,9 @@ export function GameView() {
       );
     };
 
-    const maxEnemey = 100;
+    const maxEnemey = 300;
     let currentEnemy = 0;
-    const timer = new Timer(0.3, { type: "infinite" });
+    const timer = new Timer(0.2, { type: "infinite" });
     const enemySpawnSystem: System = (context) => {
       timer.tick(context.deltaTime);
       if (timer.segmentFinished) {
@@ -362,7 +362,7 @@ export function GameView() {
 
     const quadtree = new Quadtree<Entity>(
       { x: 0, y: 0, width: 1000, height: 1000 },
-      30,
+      50,
     );
     engine.signals.anyEntityDespawned.register((data) => {
       if (engine.world.hasComponent(data.entity, ColliderId)) {
@@ -384,9 +384,11 @@ export function GameView() {
           quadtree.update(collider);
         },
       );
+
+      quadtree.shrinkIfNeeded();
     };
 
-    const queryResult: Collider[] = [];
+    const queryResult: Set<Collider> = new Set();
     const collisionSystemRequiredComponents = [read(ColliderId)];
     const collisionSystem: System = (context) => {
       context.each(
@@ -394,11 +396,11 @@ export function GameView() {
         (entityA, rawComponentsA) => {
           const [collider] = rawComponentsA as [Collider];
 
-          queryResult.length = 0;
+          queryResult.clear();
           quadtree.query(collider.bounds, queryResult);
 
-          for (let i = 0; i < queryResult.length; i++) {
-            const entityB = queryResult[i].data;
+          for (const result of queryResult) {
+            const entityB = result.data;
             for (const e of context.readEvent("collision")) {
               assert(e instanceof CollisionEvent);
               if (
