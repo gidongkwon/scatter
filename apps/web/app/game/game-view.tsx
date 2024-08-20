@@ -91,8 +91,8 @@ export function GameView() {
             },
             rotation: toRadian(180),
             scale: {
-              x: 1,
-              y: 1,
+              x: 0.5,
+              y: 0.5,
             },
           } satisfies Transform,
         ],
@@ -106,8 +106,8 @@ export function GameView() {
           {
             delayTimer: new Timer(0.1, { type: "once" }),
             offset: {
-              x: playerTexture.width,
-              y: playerTexture.height / 2,
+              x: playerTexture.width / 2,
+              y: playerTexture.height / 2 / 2,
             },
           } satisfies BulletShooter,
         ],
@@ -220,10 +220,11 @@ export function GameView() {
     const enemySpawnSystem: System = (context) => {
       timer.tick(context.deltaTime);
       if (timer.segmentFinished) {
-        currentEnemy += 1;
         if (currentEnemy >= maxEnemey) {
           return;
         }
+        currentEnemy += 1;
+        const scale = 0.3;
         context.spawn([
           [
             TransformId,
@@ -234,8 +235,8 @@ export function GameView() {
               },
               rotation: 0,
               scale: {
-                x: 1,
-                y: 1,
+                x: scale,
+                y: scale,
               },
             } satisfies Transform,
           ],
@@ -261,8 +262,8 @@ export function GameView() {
               bounds: {
                 x: 0,
                 y: 0,
-                width: enemyTexture.width,
-                height: enemyTexture.height,
+                width: enemyTexture.width * scale,
+                height: enemyTexture.height * scale,
               },
             } satisfies Collider,
           ],
@@ -283,6 +284,7 @@ export function GameView() {
             return;
           }
           bulletShooter.delayTimer.reset();
+          const scale = 0.3;
           context.spawn([
             [
               SpriteId,
@@ -301,8 +303,8 @@ export function GameView() {
                 },
                 rotation: toRadian(90),
                 scale: {
-                  x: 1,
-                  y: 1,
+                  x: scale,
+                  y: scale,
                 },
               } satisfies Transform,
             ],
@@ -322,8 +324,8 @@ export function GameView() {
                 bounds: {
                   x: 0,
                   y: 0,
-                  width: playerBulletTexture.height,
-                  height: playerBulletTexture.width,
+                  width: playerBulletTexture.height * scale,
+                  height: playerBulletTexture.width * scale,
                 },
               } satisfies Collider,
             ],
@@ -362,7 +364,9 @@ export function GameView() {
 
     const quadtree = new Quadtree<Entity>(
       { x: 0, y: 0, width: 1000, height: 1000 },
-      50,
+      40,
+      0,
+      3,
     );
     engine.signals.anyEntityDespawned.register((data) => {
       if (engine.world.hasComponent(data.entity, ColliderId)) {
