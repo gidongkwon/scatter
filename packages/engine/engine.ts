@@ -27,6 +27,7 @@ export class Engine {
   private _framesToAverage = 20;
   private _totalFPS = 0;
   averageFPS = 0;
+  private _rafHandle = 0;
 
   constructor(canvas: HTMLCanvasElement) {
     this.world = new World(this);
@@ -49,6 +50,7 @@ export class Engine {
 
   cleanup = () => {
     this.world.cleanup();
+    cancelAnimationFrame(this._rafHandle);
   };
 
   private initRenderer = () => {
@@ -148,7 +150,7 @@ export class Engine {
     this.update(deltaTime);
     this.render();
 
-    requestAnimationFrame(this.step);
+    this._rafHandle = requestAnimationFrame(this.step);
   };
 
   private update = (deltaTime: number) => {
