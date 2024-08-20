@@ -1,6 +1,10 @@
 import type { System } from "@scatter/engine";
 import type { Sprite } from "@scatter/engine/2d/sprite";
 import type { Transform } from "@scatter/engine/2d/transform";
+import {
+  type BoundsWithData,
+  Quadtree,
+} from "@scatter/engine/collections/quadtree";
 import type { Component } from "@scatter/engine/ecs/component/component";
 import {
   read,
@@ -63,10 +67,7 @@ export function GameView() {
     }
     const RemoveOnOutsideId = engine.world.registerComponent();
     const ColliderId = engine.world.registerComponent();
-    interface Collider {
-      width: number;
-      height: number;
-    }
+    interface Collider extends BoundsWithData<Entity> {}
 
     engine.world.registerEvent("collision");
     class CollisionEvent extends ScatterEvent {
@@ -113,8 +114,13 @@ export function GameView() {
         [
           ColliderId,
           {
-            width: playerTexture.width,
-            height: playerTexture.height,
+            data: -1,
+            bounds: {
+              x: 0,
+              y: 0,
+              width: playerTexture.width,
+              height: playerTexture.height,
+            },
           } satisfies Collider,
         ],
       ]);
@@ -193,8 +199,13 @@ export function GameView() {
               [
                 ColliderId,
                 {
-                  width: playerBulletTexture.height,
-                  height: playerBulletTexture.width,
+                  data: -1,
+                  bounds: {
+                    x: 0,
+                    y: 0,
+                    width: playerBulletTexture.height,
+                    height: playerBulletTexture.width,
+                  },
                 } satisfies Collider,
               ],
             ]);
@@ -203,10 +214,16 @@ export function GameView() {
       );
     };
 
-    const timer = new Timer(5, { type: "infinite" });
+    const maxEnemey = 100;
+    let currentEnemy = 0;
+    const timer = new Timer(0.3, { type: "infinite" });
     const enemySpawnSystem: System = (context) => {
       timer.tick(context.deltaTime);
       if (timer.segmentFinished) {
+        currentEnemy += 1;
+        if (currentEnemy >= maxEnemey) {
+          return;
+        }
         context.spawn([
           [
             TransformId,
@@ -240,8 +257,13 @@ export function GameView() {
           [
             ColliderId,
             {
-              width: enemyTexture.width,
-              height: enemyTexture.height,
+              data: -1,
+              bounds: {
+                x: 0,
+                y: 0,
+                width: enemyTexture.width,
+                height: enemyTexture.height,
+              },
             } satisfies Collider,
           ],
         ]);
@@ -296,8 +318,13 @@ export function GameView() {
             [
               ColliderId,
               {
-                width: playerBulletTexture.height,
-                height: playerBulletTexture.width,
+                data: -1,
+                bounds: {
+                  x: 0,
+                  y: 0,
+                  width: playerBulletTexture.height,
+                  height: playerBulletTexture.width,
+                },
               } satisfies Collider,
             ],
           ]);
@@ -333,58 +360,59 @@ export function GameView() {
       );
     };
 
+    const quadtree = new Quadtree<Entity>(
+      { x: 0, y: 0, width: 1000, height: 1000 },
+      30,
+    );
+    engine.signals.anyEntityDespawned.register((data) => {
+      if (engine.world.hasComponent(data.entity, ColliderId)) {
+        quadtree.remove(
+          engine.world.getComponent(data.entity, ColliderId) as Collider,
+        );
+      }
+    });
+    const updateColliderQuadtreeSystem: System = (context) => {
+      context.each(
+        [read(TransformId), write(ColliderId)],
+        (entity, rawComponents) => {
+          const [transform, collider] = rawComponents as [Transform, Collider];
+
+          collider.bounds.x = transform.position.x;
+          collider.bounds.y = transform.position.y;
+          collider.data = entity;
+
+          quadtree.update(collider);
+        },
+      );
+    };
+
+    const queryResult: Collider[] = [];
+    const collisionSystemRequiredComponents = [read(ColliderId)];
     const collisionSystem: System = (context) => {
       context.each(
-        [read(TransformId), read(ColliderId)],
+        collisionSystemRequiredComponents,
         (entityA, rawComponentsA) => {
-          const [transformA, colliderA] = rawComponentsA as [
-            Transform,
-            Collider,
-          ];
-          const leftA = transformA.position.x;
-          const rightA = transformA.position.x + colliderA.width;
-          const topA = transformA.position.y;
-          const bottomA = transformA.position.y + colliderA.height;
+          const [collider] = rawComponentsA as [Collider];
 
-          context.each(
-            [read(TransformId), read(ColliderId)],
-            (entityB, rawComponentsB) => {
-              if (entityA === entityB) {
+          queryResult.length = 0;
+          quadtree.query(collider.bounds, queryResult);
+
+          for (let i = 0; i < queryResult.length; i++) {
+            const entityB = queryResult[i].data;
+            for (const e of context.readEvent("collision")) {
+              assert(e instanceof CollisionEvent);
+              if (
+                (e.a === entityA && e.b === entityB) ||
+                (e.b === entityA && e.a === entityB)
+              ) {
                 return;
               }
-              const [transformB, colliderB] = rawComponentsB as [
-                Transform,
-                Collider,
-              ];
-              const leftB = transformB.position.x;
-              const rightB = transformB.position.x + colliderB.width;
-              const topB = transformB.position.y;
-              const bottomB = transformB.position.y + colliderB.height;
-
-              let collided = true;
-              if (rightA < leftB || leftA > rightB) collided = false;
-              if (bottomA < topB || topA > bottomB) collided = false;
-
-              if (collided) {
-                const alreadyProcessed = context
-                  .readEvent("collision")
-                  .find((e) => {
-                    assert(e instanceof CollisionEvent);
-                    return (
-                      (e.a === entityA && e.b === entityB) ||
-                      (e.b === entityA && e.a === entityB)
-                    );
-                  });
-                if (alreadyProcessed != null) {
-                  return;
-                }
-                context.createEvent(
-                  "collision",
-                  new CollisionEvent(entityA, entityB),
-                );
-              }
-            },
-          );
+            }
+            context.createEvent(
+              "collision",
+              new CollisionEvent(entityA, entityB),
+            );
+          }
         },
       );
     };
@@ -425,6 +453,7 @@ export function GameView() {
     engine.world.addSystem("update", enemySpawnSystem);
     engine.world.addSystem("update", enemyShootSystem);
     engine.world.addSystem("update", velocitySystem);
+    engine.world.addSystem("update", updateColliderQuadtreeSystem);
     engine.world.addSystem("update", collisionSystem);
     engine.world.addSystem("update", scoreSystem);
     engine.world.addSystem("update", clearOutsideObjectSystem);
@@ -435,16 +464,20 @@ export function GameView() {
       <canvas ref={canvasRef} className="flex-1 min-w-0">
         No canvas support.
       </canvas>
-      <div className="w-[300px]">
-        {Object.entries(selectedEntity).map(([componentId, component]) => {
-          return (
-            <ComponentView
-              key={componentId}
-              componentId={Number.parseInt(componentId)}
-              component={component as Component}
-            />
-          );
-        })}
+      <div className="w-[300px] flex flex-col">
+        <div>Avg. FPS: {engine?.averageFPS.toFixed(2)}</div>
+        <div>Entities: {engine?.world.entities.alives().length}</div>
+        <div>
+          {Object.entries(selectedEntity).map(([componentId, component]) => {
+            return (
+              <ComponentView
+                key={componentId}
+                componentId={Number.parseInt(componentId)}
+                component={component as Component}
+              />
+            );
+          })}
+        </div>
       </div>
     </div>
   );

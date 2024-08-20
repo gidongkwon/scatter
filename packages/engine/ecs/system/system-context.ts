@@ -7,6 +7,8 @@ import type { Entity, EntityId } from "../entity/entity";
 import type { ScatterEvent } from "../event/event";
 import type { World } from "../world";
 
+export type EachCallback = (entity: Entity, components: Component[]) => void;
+
 /**
  * A Context for system update.
  * System should not call some functions directly like addEntity/addComponent,
@@ -29,10 +31,10 @@ export class SystemContext {
    * @param componentAccessDescriptors
    * @param callback
    */
-  each = (
+  each(
     componentAccessDescriptors: ComponentAccessDescriptor[],
-    callback: (entity: Entity, components: Component[]) => void,
-  ) => {
+    callback: EachCallback,
+  ) {
     if (componentAccessDescriptors.length === 0) {
       return;
     }
@@ -79,7 +81,7 @@ export class SystemContext {
         }
       }
     }
-  };
+  }
 
   spawn = (components: [ComponentId, Component][]) => {
     const entity = this._world.addEntity();

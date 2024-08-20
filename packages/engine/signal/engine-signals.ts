@@ -8,6 +8,10 @@ type EntityComponentChangedData = {
   component: Component;
 };
 
+type EntityDespawnedData = {
+  entity: Entity;
+};
+
 class SignalPerEntity<TData> {
   _entityToSignal: Map<Entity, Signal<TData>> = new Map();
   register = (entity: Entity, handler: (data: TData) => void) => {
@@ -23,4 +27,5 @@ class SignalPerEntity<TData> {
 
 export class EngineSignals {
   entityComponentChanged = new SignalPerEntity<EntityComponentChangedData>();
+  anyEntityDespawned = new Signal<EntityDespawnedData>();
 }

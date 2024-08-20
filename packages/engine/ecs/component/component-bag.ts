@@ -4,7 +4,7 @@ import type { Entity } from "../entity/entity";
 import type { Component } from "./component";
 
 export class ComponentBag {
-  sparseEntityIndicies: (number | undefined)[] = [];
+  entityIndicies: Map<Entity, number> = new Map();
   denseEntities: Entity[] = [];
   denseComponents: Component[] = [];
 
@@ -21,11 +21,11 @@ export class ComponentBag {
 
     assert(entitiesLength === componentsLength);
 
-    this.sparseEntityIndicies[entity] = entitiesLength - 1;
+    this.entityIndicies.set(entity, entitiesLength - 1);
   };
 
   has = (entity: Entity) => {
-    return this.sparseEntityIndicies[entity] != null;
+    return this.entityIndicies.has(entity);
   };
 
   remove = (entity: Entity) => {
@@ -33,16 +33,16 @@ export class ComponentBag {
       return;
     }
     // biome-ignore lint/style/noNonNullAssertion: checked by has()
-    const index = this.sparseEntityIndicies[entity]!;
+    const index = this.entityIndicies.get(entity)!;
     const lastIndex = this.denseComponents.length - 1;
     const swapTargetEntity = this.denseEntities[lastIndex];
     swap(this.denseEntities, index, lastIndex);
     swap(this.denseComponents, index, lastIndex);
     this.denseComponents.length -= 1;
     this.denseEntities.length -= 1;
-    this.sparseEntityIndicies[entity] = undefined;
+    this.entityIndicies.delete(entity);
     if (swapTargetEntity !== undefined) {
-      this.sparseEntityIndicies[swapTargetEntity] = index;
+      this.entityIndicies.set(swapTargetEntity, index);
     }
   };
 
@@ -51,7 +51,7 @@ export class ComponentBag {
       return null;
     }
     // biome-ignore lint/style/noNonNullAssertion: checked by has()
-    return this.denseComponents[this.sparseEntityIndicies[entity]!];
+    return this.denseComponents[this.entityIndicies.get(entity)!];
   };
 
   get length() {

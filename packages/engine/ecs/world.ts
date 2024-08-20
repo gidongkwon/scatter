@@ -34,6 +34,8 @@ export class World {
     if (!this.entities.isAlive(entity)) {
       return;
     }
+    // call this signal before cleanup to handle with remaining data.
+    this.engine.signals.anyEntityDespawned.emit({ entity });
     this.entities.remove(entity);
     this.components.removeEntity(entity);
   };
