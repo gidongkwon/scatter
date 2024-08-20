@@ -1,10 +1,11 @@
-import type { Component, ComponentId } from "../component/component";
-import type { Entity, EntityId } from "../entity/entity";
-import type { World } from "../world";
-import { Keyboard } from "../../input/keyboard";
-import type { ScatterEvent } from "../event/event";
-import { assert } from "../../utils/assert";
 import type { Engine } from "../../engine";
+import { Keyboard } from "../../input/keyboard";
+import { assert } from "../../utils/assert";
+import type { Component, ComponentId } from "../component/component";
+import type { ComponentAccessDescriptor } from "../component/component-access-descriptor";
+import type { Entity, EntityId } from "../entity/entity";
+import type { ScatterEvent } from "../event/event";
+import type { World } from "../world";
 
 /**
  * A Context for system update.
@@ -18,30 +19,35 @@ export class SystemContext {
   keyboard: Keyboard = new Keyboard();
 
   constructor(
-    public world: World,
-    public engine: Engine,
+    public _world: World,
+    public _engine: Engine,
   ) {}
 
   /**
    * Iterates every entity that has all component of componentIds.
    * Memory inefficient version.
-   * @param componentIds
+   * @param componentAccessDescriptors
    * @param callback
    */
   each = (
-    componentIds: ComponentId[],
+    componentAccessDescriptors: ComponentAccessDescriptor[],
     callback: (entity: Entity, components: Component[]) => void,
   ) => {
-    if (componentIds.length === 0) {
+    if (componentAccessDescriptors.length === 0) {
       return;
     }
 
-    const componentBags = componentIds
-      .map(this.world.components.get)
+    const componentBags = componentAccessDescriptors
+      .map((descriptor) => descriptor.componentId)
+      .map(this._world.components.get)
       .filter((v) => v != null);
-    if (componentIds.length !== componentBags.length) {
+    if (componentAccessDescriptors.length !== componentBags.length) {
       return;
     }
+
+    const componentIds = componentAccessDescriptors.map(
+      (desc) => desc.componentId,
+    );
 
     const shortestBag = componentBags.sort((a, b) => a.length - b.length)[0];
     for (const entity of shortestBag.denseEntities) {
@@ -53,16 +59,22 @@ export class SystemContext {
         callback(
           entity,
           componentIds.map((componentId) =>
-            this.world.components.get(componentId)?.get(entity),
+            this._world.components.get(componentId)?.get(entity),
           ),
         );
 
-        // TODO: implement dirty checking
-        for (const componentId of componentIds) {
-          this.engine.signals.entityComponentChanged.tryEmit(entity, {
+        // TODO: implement dirty checking?
+        for (const descriptor of componentAccessDescriptors) {
+          if (descriptor.type !== "write") {
+            continue;
+          }
+
+          this._engine.signals.entityComponentChanged.tryEmit(entity, {
             entity,
-            componentId,
-            component: this.world.components.get(componentId)?.get(entity),
+            componentId: descriptor.componentId,
+            component: this._world.components
+              .get(descriptor.componentId)
+              ?.get(entity),
           });
         }
       }
@@ -70,23 +82,40 @@ export class SystemContext {
   };
 
   spawn = (components: [ComponentId, Component][]) => {
-    const entity = this.world.addEntity();
+    const entity = this._world.addEntity();
     for (const idComponent of components) {
-      this.world.addComponent(entity, idComponent[0], idComponent[1]);
+      this._world.addComponent(entity, idComponent[0], idComponent[1]);
     }
   };
 
   despawn = (entityId: EntityId) => {
-    this.world.removeEntity(entityId);
+    this._world.removeEntity(entityId);
   };
 
   createEvent = (name: string, event: ScatterEvent) => {
-    assert(this.world.eventQueues.has(name));
-    this.world.eventQueues.get(name)?.push(event);
+    assert(this._world.eventQueues.has(name));
+    this._world.eventQueues.get(name)?.push(event);
   };
 
   readEvent = (name: string) => {
-    return this.world.eventQueues.get(name) ?? [];
+    return this._world.eventQueues.get(name) ?? [];
+  };
+
+  hasComponent = (entity: Entity, componentId: ComponentId) => {
+    return this._world.hasComponent(entity, componentId);
+  };
+
+  getComponent = (
+    entity: Entity,
+    componentAccessDescriptor: ComponentAccessDescriptor,
+  ) => {
+    // if (componentAccessDescriptor.type === "write") {
+    //   // TODO: enqueue change
+    // }
+    return this._world.getComponent(
+      entity,
+      componentAccessDescriptor.componentId,
+    );
   };
 
   _updateDeltaTime = (deltaTime: number) => {

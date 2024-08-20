@@ -1,6 +1,6 @@
 import type { Component, ComponentId } from "../ecs/component/component";
-import { Signal } from "./signal";
 import type { Entity } from "../ecs/entity/entity";
+import { Signal } from "./signal";
 
 type EntityComponentChangedData = {
   entity: Entity;

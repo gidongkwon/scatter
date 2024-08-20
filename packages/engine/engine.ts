@@ -4,8 +4,8 @@ import { createSpriteRenderSystem } from "./2d/sprite-render-system";
 import { Assets } from "./assets";
 import { World } from "./ecs/world";
 import { createKeyboardSystem } from "./input/keyboard";
-import { resizeCanvasToDisplaySize } from "./utils/canvas";
 import { EngineSignals } from "./signal/engine-signals";
+import { resizeCanvasToDisplaySize } from "./utils/canvas";
 
 export class Engine {
   initialized = false;

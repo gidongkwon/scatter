@@ -1,13 +1,19 @@
+import type { System } from "@scatter/engine";
 import type { Sprite } from "@scatter/engine/2d/sprite";
 import type { Transform } from "@scatter/engine/2d/transform";
-import { useRef, useState } from "react";
-import { useEngine } from "./use-engine";
-import type { System } from "@scatter/engine";
-import { Timer } from "@scatter/engine/timer/timer";
-import { toRadian } from "@scatter/engine/math/math";
-import { ScatterEvent } from "@scatter/engine/ecs/event/event";
+import type { Component } from "@scatter/engine/ecs/component/component";
+import {
+  read,
+  write,
+} from "@scatter/engine/ecs/component/component-access-descriptor";
 import type { Entity } from "@scatter/engine/ecs/entity/entity";
+import { ScatterEvent } from "@scatter/engine/ecs/event/event";
+import { toRadian } from "@scatter/engine/math/math";
+import { Timer } from "@scatter/engine/timer/timer";
 import { assert } from "@scatter/engine/utils/assert";
+import { useRef, useState } from "react";
+import { ComponentView } from "~/inspector/component-view";
+import { useEngine } from "./use-engine";
 
 export function GameView() {
   const [selectedEntity, setSelectedEntity] = useState({});
@@ -50,6 +56,10 @@ export function GameView() {
     const BulletShooterId = engine.world.registerComponent();
     interface BulletShooter {
       delayTimer: Timer;
+      offset: {
+        x: number;
+        y: number;
+      };
     }
     const RemoveOnOutsideId = engine.world.registerComponent();
     const ColliderId = engine.world.registerComponent();
@@ -94,6 +104,10 @@ export function GameView() {
           BulletShooterId,
           {
             delayTimer: new Timer(0.1, { type: "once" }),
+            offset: {
+              x: playerTexture.width,
+              y: playerTexture.height / 2,
+            },
           } satisfies BulletShooter,
         ],
         [
@@ -107,28 +121,31 @@ export function GameView() {
     });
 
     const playerMoveSystem: System = (context) => {
-      context.each([TransformId, SpriteId, PlayerId], (_, rawComponents) => {
-        const [transform] = rawComponents as [Transform];
+      context.each(
+        [write(TransformId), read(SpriteId), read(PlayerId)],
+        (_, rawComponents) => {
+          const [transform] = rawComponents as [Transform];
 
-        const speed = 300;
-        if (context.keyboard.isPressed("ArrowLeft")) {
-          transform.position.x -= speed * context.deltaTime;
-        }
-        if (context.keyboard.isPressed("ArrowRight")) {
-          transform.position.x += speed * context.deltaTime;
-        }
-        if (context.keyboard.isPressed("ArrowUp")) {
-          transform.position.y -= speed * context.deltaTime;
-        }
-        if (context.keyboard.isPressed("ArrowDown")) {
-          transform.position.y += speed * context.deltaTime;
-        }
-      });
+          const speed = 300;
+          if (context.keyboard.isPressed("ArrowLeft")) {
+            transform.position.x -= speed * context.deltaTime;
+          }
+          if (context.keyboard.isPressed("ArrowRight")) {
+            transform.position.x += speed * context.deltaTime;
+          }
+          if (context.keyboard.isPressed("ArrowUp")) {
+            transform.position.y -= speed * context.deltaTime;
+          }
+          if (context.keyboard.isPressed("ArrowDown")) {
+            transform.position.y += speed * context.deltaTime;
+          }
+        },
+      );
     };
 
     const playerShootSystem: System = (context) => {
       context.each(
-        [TransformId, BulletShooterId, PlayerId],
+        [read(TransformId), write(BulletShooterId), read(PlayerId)],
         (shooter, rawComponents) => {
           const [playerTransform, bulletShooter] = rawComponents as [
             Transform,
@@ -167,7 +184,7 @@ export function GameView() {
               [
                 VelocityId,
                 {
-                  x: 500,
+                  x: 700,
                   y: 0,
                 } satisfies Velocity,
               ],
@@ -214,6 +231,10 @@ export function GameView() {
             BulletShooterId,
             {
               delayTimer: new Timer(0.5, { type: "once" }),
+              offset: {
+                x: 0,
+                y: 0,
+              },
             } satisfies BulletShooter,
           ],
           [
@@ -229,7 +250,7 @@ export function GameView() {
 
     const enemyShootSystem: System = (context) => {
       context.each(
-        [TransformId, BulletShooterId, EnemyId],
+        [read(TransformId), write(BulletShooterId), read(EnemyId)],
         (shooter, rawComponents) => {
           const [enemyTransform, bulletShooter] = rawComponents as [
             Transform,
@@ -285,16 +306,19 @@ export function GameView() {
     };
 
     const velocitySystem: System = (context) => {
-      context.each([VelocityId, TransformId], (_, rawComponents) => {
-        const [velocity, transform] = rawComponents as [Velocity, Transform];
-        transform.position.x += velocity.x * context.deltaTime;
-        transform.position.y += velocity.y * context.deltaTime;
-      });
+      context.each(
+        [read(VelocityId), write(TransformId)],
+        (_, rawComponents) => {
+          const [velocity, transform] = rawComponents as [Velocity, Transform];
+          transform.position.x += velocity.x * context.deltaTime;
+          transform.position.y += velocity.y * context.deltaTime;
+        },
+      );
     };
 
     const clearOutsideObjectSystem: System = (context) => {
       context.each(
-        [TransformId, SpriteId, RemoveOnOutsideId],
+        [read(TransformId), read(SpriteId), read(RemoveOnOutsideId)],
         (entity, rawComponents) => {
           const [transform, sprite] = rawComponents as [Transform, Sprite];
           if (
@@ -310,50 +334,59 @@ export function GameView() {
     };
 
     const collisionSystem: System = (context) => {
-      context.each([TransformId, ColliderId], (entityA, rawComponentsA) => {
-        const [transformA, colliderA] = rawComponentsA as [Transform, Collider];
-        const leftA = transformA.position.x;
-        const rightA = transformA.position.x + colliderA.width;
-        const topA = transformA.position.y;
-        const bottomA = transformA.position.y + colliderA.height;
-
-        context.each([TransformId, ColliderId], (entityB, rawComponentsB) => {
-          if (entityA === entityB) {
-            return;
-          }
-          const [transformB, colliderB] = rawComponentsB as [
+      context.each(
+        [read(TransformId), read(ColliderId)],
+        (entityA, rawComponentsA) => {
+          const [transformA, colliderA] = rawComponentsA as [
             Transform,
             Collider,
           ];
-          const leftB = transformB.position.x;
-          const rightB = transformB.position.x + colliderB.width;
-          const topB = transformB.position.y;
-          const bottomB = transformB.position.y + colliderB.height;
+          const leftA = transformA.position.x;
+          const rightA = transformA.position.x + colliderA.width;
+          const topA = transformA.position.y;
+          const bottomA = transformA.position.y + colliderA.height;
 
-          let collided = true;
-          if (rightA < leftB || leftA > rightB) collided = false;
-          if (bottomA < topB || topA > bottomB) collided = false;
+          context.each(
+            [read(TransformId), read(ColliderId)],
+            (entityB, rawComponentsB) => {
+              if (entityA === entityB) {
+                return;
+              }
+              const [transformB, colliderB] = rawComponentsB as [
+                Transform,
+                Collider,
+              ];
+              const leftB = transformB.position.x;
+              const rightB = transformB.position.x + colliderB.width;
+              const topB = transformB.position.y;
+              const bottomB = transformB.position.y + colliderB.height;
 
-          if (collided) {
-            const alreadyProcessed = context
-              .readEvent("collision")
-              .find((e) => {
-                assert(e instanceof CollisionEvent);
-                return (
-                  (e.a === entityA && e.b === entityB) ||
-                  (e.b === entityA && e.a === entityB)
+              let collided = true;
+              if (rightA < leftB || leftA > rightB) collided = false;
+              if (bottomA < topB || topA > bottomB) collided = false;
+
+              if (collided) {
+                const alreadyProcessed = context
+                  .readEvent("collision")
+                  .find((e) => {
+                    assert(e instanceof CollisionEvent);
+                    return (
+                      (e.a === entityA && e.b === entityB) ||
+                      (e.b === entityA && e.a === entityB)
+                    );
+                  });
+                if (alreadyProcessed != null) {
+                  return;
+                }
+                context.createEvent(
+                  "collision",
+                  new CollisionEvent(entityA, entityB),
                 );
-              });
-            if (alreadyProcessed != null) {
-              return;
-            }
-            context.createEvent(
-              "collision",
-              new CollisionEvent(entityA, entityB),
-            );
-          }
-        });
-      });
+              }
+            },
+          );
+        },
+      );
     };
 
     const scoreSystem: System = (context) => {
@@ -361,24 +394,24 @@ export function GameView() {
         assert(event instanceof CollisionEvent);
         let bulletEntity = event.a;
         let targetEntity = event.b;
-        if (!context.world.hasComponent(bulletEntity, BulletId)) {
+        if (!context.hasComponent(bulletEntity, BulletId)) {
           bulletEntity = event.b;
           targetEntity = event.a;
         }
 
         // both are not bullet. continue.
-        if (!context.world.hasComponent(bulletEntity, BulletId)) {
+        if (!context.hasComponent(bulletEntity, BulletId)) {
           continue;
         }
 
-        const bullet = context.world.getComponent(
+        const bullet = context.getComponent(
           bulletEntity,
-          BulletId,
+          read(BulletId),
         ) as Bullet;
 
-        const scoredPlayerComponent = context.world.getComponent(
+        const scoredPlayerComponent = context.getComponent(
           bullet.owner,
-          PlayerId,
+          write(PlayerId),
         ) as Player;
         if (bullet.owner !== targetEntity && scoredPlayerComponent != null) {
           scoredPlayerComponent.score += 1;
@@ -405,24 +438,11 @@ export function GameView() {
       <div className="w-[300px]">
         {Object.entries(selectedEntity).map(([componentId, component]) => {
           return (
-            <div key={componentId} className="border-b-gray-200 border-b-2 p-3">
-              <h3 className="font-bold">{componentId}</h3>
-              <ul>
-                {(() => {
-                  if (component == null) {
-                    return null;
-                  }
-                  if (typeof component === "object") {
-                    return Object.entries(component).map(([key, value]) => (
-                      <li key={key} className="flex gap-3">
-                        <p className="w-24">{key}</p>
-                        <input disabled type="text" value={value} />
-                      </li>
-                    ));
-                  }
-                })()}
-              </ul>
-            </div>
+            <ComponentView
+              key={componentId}
+              componentId={Number.parseInt(componentId)}
+              component={component as Component}
+            />
           );
         })}
       </div>

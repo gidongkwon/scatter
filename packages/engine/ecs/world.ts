@@ -1,8 +1,10 @@
+import type { Engine } from "../engine";
 import { assert } from "../utils/assert";
 import type { Component, ComponentId } from "./component/component";
 import { ComponentRegistry } from "./component/component-registry";
 import type { Entity } from "./entity/entity";
 import { EntityRegistry } from "./entity/entity-registry";
+import type { EventName, ScatterEvent } from "./event/event";
 import type {
   System,
   SystemCleanup,
@@ -10,8 +12,6 @@ import type {
   SystemWithEffect,
 } from "./system/system";
 import { SystemContext } from "./system/system-context";
-import type { EventName, ScatterEvent } from "./event/event";
-import type { Engine } from "../engine";
 
 export class World {
   components: ComponentRegistry = new ComponentRegistry();
@@ -49,6 +49,12 @@ export class World {
   ) => {
     assert(this.components.has(componentId));
     this.components.get(componentId)?.add(entity, component);
+    // TODO: decide signal's container
+    this.engine.signals.entityComponentChanged.tryEmit(entity, {
+      entity,
+      componentId,
+      component,
+    });
   };
 
   getComponent = (entity: Entity, componentId: ComponentId) => {
