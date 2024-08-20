@@ -10,13 +10,20 @@ import type {
   SystemWithEffect,
 } from "./system/system";
 import { SystemContext } from "./system/system-context";
+import type { EventName, ScatterEvent } from "./event/event";
+import type { Engine } from "../engine";
 
 export class World {
   components: ComponentRegistry = new ComponentRegistry();
   entities: EntityRegistry = new EntityRegistry();
   systems: Map<SystemPhase, (System | SystemWithEffect)[]> = new Map();
+  eventQueues: Map<EventName, ScatterEvent[]> = new Map();
   cleanups: SystemCleanup[] = [];
-  context: SystemContext = new SystemContext(this);
+  context: SystemContext;
+
+  constructor(private engine: Engine) {
+    this.context = new SystemContext(this, this.engine);
+  }
 
   addEntity = () => {
     const entityId = this.entities.create();
@@ -24,6 +31,9 @@ export class World {
   };
 
   removeEntity = (entity: Entity) => {
+    if (!this.entities.isAlive(entity)) {
+      return;
+    }
     this.entities.remove(entity);
     this.components.removeEntity(entity);
   };
@@ -41,12 +51,20 @@ export class World {
     this.components.get(componentId)?.add(entity, component);
   };
 
+  getComponent = (entity: Entity, componentId: ComponentId) => {
+    return this.components.get(componentId)?.get(entity);
+  };
+
+  getAllComponents = (entity: Entity) => {
+    return this.components.getAllFor(entity);
+  };
+
   removeComponent = (entity: Entity, componentId: ComponentId) => {
     this.components.get(componentId)?.remove(entity);
   };
 
   hasComponent = (entity: Entity, componentId: ComponentId) => {
-    return this.components.get(componentId)?.has(entity);
+    return this.components.get(componentId)?.has(entity) ?? false;
   };
 
   addSystem = (phase: SystemPhase, system: System | SystemWithEffect) => {
@@ -80,6 +98,10 @@ export class World {
     }
   };
 
+  registerEvent = (name: string) => {
+    this.eventQueues.set(name, []);
+  };
+
   update = (deltaTime: number) => {
     this.context._updateDeltaTime(deltaTime);
 
@@ -89,6 +111,9 @@ export class World {
         system(this.context);
       }
     }
+
+    // TODO: find out whether to move event stuff to engine
+    this.clearEventQueues();
   };
 
   render = () => {
@@ -105,4 +130,10 @@ export class World {
       cleanup();
     }
   };
+
+  private clearEventQueues() {
+    for (const [_, events] of this.eventQueues) {
+      events.length = 0;
+    }
+  }
 }

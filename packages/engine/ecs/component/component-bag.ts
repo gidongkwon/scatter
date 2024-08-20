@@ -25,7 +25,7 @@ export class ComponentBag {
   };
 
   has = (entity: Entity) => {
-    return this.sparseEntityIndicies[entity] !== undefined;
+    return this.sparseEntityIndicies[entity] != null;
   };
 
   remove = (entity: Entity) => {

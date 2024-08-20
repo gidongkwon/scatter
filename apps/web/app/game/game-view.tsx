@@ -1,13 +1,25 @@
 import type { Sprite } from "@scatter/engine/2d/sprite";
 import type { Transform } from "@scatter/engine/2d/transform";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useEngine } from "./use-engine";
 import type { System } from "@scatter/engine";
 import { Timer } from "@scatter/engine/timer/timer";
+import { toRadian } from "@scatter/engine/math/math";
+import { ScatterEvent } from "@scatter/engine/ecs/event/event";
+import type { Entity } from "@scatter/engine/ecs/entity/entity";
+import { assert } from "@scatter/engine/utils/assert";
 
 export function GameView() {
+  const [selectedEntity, setSelectedEntity] = useState({});
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engine = useEngine(canvasRef, (engine) => {
+    engine.signals.entityComponentChanged.register(0, (data) => {
+      setSelectedEntity((before) => ({
+        ...before,
+        [data.componentId]: data.component,
+      }));
+    });
+
     const playerTexture = engine.assets.loadImage(
       "/shooter/playerShip1_blue.png",
     );
@@ -31,11 +43,31 @@ export function GameView() {
       score: number;
     }
     const EnemyId = engine.world.registerComponent();
+    const BulletId = engine.world.registerComponent();
+    interface Bullet {
+      owner: Entity;
+    }
     const BulletShooterId = engine.world.registerComponent();
     interface BulletShooter {
       delayTimer: Timer;
     }
     const RemoveOnOutsideId = engine.world.registerComponent();
+    const ColliderId = engine.world.registerComponent();
+    interface Collider {
+      width: number;
+      height: number;
+    }
+
+    engine.world.registerEvent("collision");
+    class CollisionEvent extends ScatterEvent {
+      name = "collision";
+      constructor(
+        public a: Entity,
+        public b: Entity,
+      ) {
+        super();
+      }
+    }
 
     engine.world.addSystem("init", (context) => {
       context.spawn([
@@ -46,6 +78,7 @@ export function GameView() {
               x: 100,
               y: 100,
             },
+            rotation: toRadian(180),
             scale: {
               x: 1,
               y: 1,
@@ -63,12 +96,19 @@ export function GameView() {
             delayTimer: new Timer(0.1, { type: "once" }),
           } satisfies BulletShooter,
         ],
+        [
+          ColliderId,
+          {
+            width: playerTexture.width,
+            height: playerTexture.height,
+          } satisfies Collider,
+        ],
       ]);
     });
 
     const playerMoveSystem: System = (context) => {
       context.each([TransformId, SpriteId, PlayerId], (_, rawComponents) => {
-        const [transform] = rawComponents as unknown as [Transform];
+        const [transform] = rawComponents as [Transform];
 
         const speed = 300;
         if (context.keyboard.isPressed("ArrowLeft")) {
@@ -89,8 +129,8 @@ export function GameView() {
     const playerShootSystem: System = (context) => {
       context.each(
         [TransformId, BulletShooterId, PlayerId],
-        (_, rawComponents) => {
-          const [playerTransform, bulletShooter] = rawComponents as unknown as [
+        (shooter, rawComponents) => {
+          const [playerTransform, bulletShooter] = rawComponents as [
             Transform,
             BulletShooter,
           ];
@@ -117,6 +157,7 @@ export function GameView() {
                     x: playerTransform.position.x,
                     y: playerTransform.position.y,
                   },
+                  rotation: toRadian(90),
                   scale: {
                     x: 1,
                     y: 1,
@@ -131,6 +172,14 @@ export function GameView() {
                 } satisfies Velocity,
               ],
               [RemoveOnOutsideId, true],
+              [BulletId, { owner: shooter } satisfies Bullet],
+              [
+                ColliderId,
+                {
+                  width: playerBulletTexture.height,
+                  height: playerBulletTexture.width,
+                } satisfies Collider,
+              ],
             ]);
           }
         },
@@ -149,6 +198,7 @@ export function GameView() {
                 x: Math.random() * context.stageWidth,
                 y: Math.random() * context.stageHeight,
               },
+              rotation: 0,
               scale: {
                 x: 1,
                 y: 1,
@@ -166,6 +216,13 @@ export function GameView() {
               delayTimer: new Timer(0.5, { type: "once" }),
             } satisfies BulletShooter,
           ],
+          [
+            ColliderId,
+            {
+              width: enemyTexture.width,
+              height: enemyTexture.height,
+            } satisfies Collider,
+          ],
         ]);
       }
     };
@@ -173,8 +230,8 @@ export function GameView() {
     const enemyShootSystem: System = (context) => {
       context.each(
         [TransformId, BulletShooterId, EnemyId],
-        (_, rawComponents) => {
-          const [enemyTransform, bulletShooter] = rawComponents as unknown as [
+        (shooter, rawComponents) => {
+          const [enemyTransform, bulletShooter] = rawComponents as [
             Transform,
             BulletShooter,
           ];
@@ -199,6 +256,7 @@ export function GameView() {
                   x: enemyTransform.position.x,
                   y: enemyTransform.position.y,
                 },
+                rotation: toRadian(90),
                 scale: {
                   x: 1,
                   y: 1,
@@ -213,6 +271,14 @@ export function GameView() {
               } satisfies Velocity,
             ],
             [RemoveOnOutsideId, true],
+            [BulletId, { owner: shooter } satisfies Bullet],
+            [
+              ColliderId,
+              {
+                width: playerBulletTexture.height,
+                height: playerBulletTexture.width,
+              } satisfies Collider,
+            ],
           ]);
         },
       );
@@ -220,10 +286,7 @@ export function GameView() {
 
     const velocitySystem: System = (context) => {
       context.each([VelocityId, TransformId], (_, rawComponents) => {
-        const [velocity, transform] = rawComponents as unknown as [
-          Velocity,
-          Transform,
-        ];
+        const [velocity, transform] = rawComponents as [Velocity, Transform];
         transform.position.x += velocity.x * context.deltaTime;
         transform.position.y += velocity.y * context.deltaTime;
       });
@@ -233,10 +296,7 @@ export function GameView() {
       context.each(
         [TransformId, SpriteId, RemoveOnOutsideId],
         (entity, rawComponents) => {
-          const [transform, sprite] = rawComponents as unknown as [
-            Transform,
-            Sprite,
-          ];
+          const [transform, sprite] = rawComponents as [Transform, Sprite];
           if (
             transform.position.x + sprite.textureInfo.width < 0 ||
             transform.position.x > context.stageWidth ||
@@ -249,17 +309,123 @@ export function GameView() {
       );
     };
 
+    const collisionSystem: System = (context) => {
+      context.each([TransformId, ColliderId], (entityA, rawComponentsA) => {
+        const [transformA, colliderA] = rawComponentsA as [Transform, Collider];
+        const leftA = transformA.position.x;
+        const rightA = transformA.position.x + colliderA.width;
+        const topA = transformA.position.y;
+        const bottomA = transformA.position.y + colliderA.height;
+
+        context.each([TransformId, ColliderId], (entityB, rawComponentsB) => {
+          if (entityA === entityB) {
+            return;
+          }
+          const [transformB, colliderB] = rawComponentsB as [
+            Transform,
+            Collider,
+          ];
+          const leftB = transformB.position.x;
+          const rightB = transformB.position.x + colliderB.width;
+          const topB = transformB.position.y;
+          const bottomB = transformB.position.y + colliderB.height;
+
+          let collided = true;
+          if (rightA < leftB || leftA > rightB) collided = false;
+          if (bottomA < topB || topA > bottomB) collided = false;
+
+          if (collided) {
+            const alreadyProcessed = context
+              .readEvent("collision")
+              .find((e) => {
+                assert(e instanceof CollisionEvent);
+                return (
+                  (e.a === entityA && e.b === entityB) ||
+                  (e.b === entityA && e.a === entityB)
+                );
+              });
+            if (alreadyProcessed != null) {
+              return;
+            }
+            context.createEvent(
+              "collision",
+              new CollisionEvent(entityA, entityB),
+            );
+          }
+        });
+      });
+    };
+
+    const scoreSystem: System = (context) => {
+      for (const event of context.readEvent("collision")) {
+        assert(event instanceof CollisionEvent);
+        let bulletEntity = event.a;
+        let targetEntity = event.b;
+        if (!context.world.hasComponent(bulletEntity, BulletId)) {
+          bulletEntity = event.b;
+          targetEntity = event.a;
+        }
+
+        // both are not bullet. continue.
+        if (!context.world.hasComponent(bulletEntity, BulletId)) {
+          continue;
+        }
+
+        const bullet = context.world.getComponent(
+          bulletEntity,
+          BulletId,
+        ) as Bullet;
+
+        const scoredPlayerComponent = context.world.getComponent(
+          bullet.owner,
+          PlayerId,
+        ) as Player;
+        if (bullet.owner !== targetEntity && scoredPlayerComponent != null) {
+          scoredPlayerComponent.score += 1;
+          context.despawn(targetEntity);
+        }
+      }
+    };
+
     engine.world.addSystem("update", playerMoveSystem);
     engine.world.addSystem("update", playerShootSystem);
     engine.world.addSystem("update", enemySpawnSystem);
     engine.world.addSystem("update", enemyShootSystem);
     engine.world.addSystem("update", velocitySystem);
+    engine.world.addSystem("update", collisionSystem);
+    engine.world.addSystem("update", scoreSystem);
     engine.world.addSystem("update", clearOutsideObjectSystem);
   });
 
   return (
-    <canvas ref={canvasRef} className="flex-1 min-w-0">
-      No canvas support.
-    </canvas>
+    <div className="w-full h-full flex gap-3">
+      <canvas ref={canvasRef} className="flex-1 min-w-0">
+        No canvas support.
+      </canvas>
+      <div className="w-[300px]">
+        {Object.entries(selectedEntity).map(([componentId, component]) => {
+          return (
+            <div key={componentId} className="border-b-gray-200 border-b-2 p-3">
+              <h3 className="font-bold">{componentId}</h3>
+              <ul>
+                {(() => {
+                  if (component == null) {
+                    return null;
+                  }
+                  if (typeof component === "object") {
+                    return Object.entries(component).map(([key, value]) => (
+                      <li key={key} className="flex gap-3">
+                        <p className="w-24">{key}</p>
+                        <input disabled type="text" value={value} />
+                      </li>
+                    ));
+                  }
+                })()}
+              </ul>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

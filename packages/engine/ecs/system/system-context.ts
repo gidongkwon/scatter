@@ -2,6 +2,9 @@ import type { Component, ComponentId } from "../component/component";
 import type { Entity, EntityId } from "../entity/entity";
 import type { World } from "../world";
 import { Keyboard } from "../../input/keyboard";
+import type { ScatterEvent } from "../event/event";
+import { assert } from "../../utils/assert";
+import type { Engine } from "../../engine";
 
 /**
  * A Context for system update.
@@ -14,7 +17,10 @@ export class SystemContext {
   stageHeight = 0;
   keyboard: Keyboard = new Keyboard();
 
-  constructor(private world: World) {}
+  constructor(
+    public world: World,
+    public engine: Engine,
+  ) {}
 
   /**
    * Iterates every entity that has all component of componentIds.
@@ -50,6 +56,15 @@ export class SystemContext {
             this.world.components.get(componentId)?.get(entity),
           ),
         );
+
+        // TODO: implement dirty checking
+        for (const componentId of componentIds) {
+          this.engine.signals.entityComponentChanged.tryEmit(entity, {
+            entity,
+            componentId,
+            component: this.world.components.get(componentId)?.get(entity),
+          });
+        }
       }
     }
   };
@@ -63,6 +78,15 @@ export class SystemContext {
 
   despawn = (entityId: EntityId) => {
     this.world.removeEntity(entityId);
+  };
+
+  createEvent = (name: string, event: ScatterEvent) => {
+    assert(this.world.eventQueues.has(name));
+    this.world.eventQueues.get(name)?.push(event);
+  };
+
+  readEvent = (name: string) => {
+    return this.world.eventQueues.get(name) ?? [];
   };
 
   _updateDeltaTime = (deltaTime: number) => {

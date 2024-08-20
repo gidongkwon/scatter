@@ -5,6 +5,7 @@ import { Assets } from "./assets";
 import { World } from "./ecs/world";
 import { createKeyboardSystem } from "./input/keyboard";
 import { resizeCanvasToDisplaySize } from "./utils/canvas";
+import { EngineSignals } from "./signal/engine-signals";
 
 export class Engine {
   initialized = false;
@@ -12,6 +13,7 @@ export class Engine {
   world: World;
   gl: WebGL2RenderingContext;
   assets: Assets;
+  signals: EngineSignals = new EngineSignals();
 
   // renderer
   programInfo!: ProgramInfo;
@@ -27,7 +29,7 @@ export class Engine {
   averageFPS = 0;
 
   constructor(canvas: HTMLCanvasElement) {
-    this.world = new World();
+    this.world = new World(this);
     const context = canvas.getContext("webgl2", { alpha: false });
     if (!context) {
       throw new Error("WebGL2 is not available.");

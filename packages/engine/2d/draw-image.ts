@@ -12,6 +12,7 @@ export function drawImage(
   dstY: number,
   dstWidth?: number,
   dstHeight?: number,
+  dstRotation?: number,
   srcX?: number,
   srcY?: number,
   srcWidth?: number,
@@ -26,6 +27,9 @@ export function drawImage(
   gl.activeTexture(gl.TEXTURE0 + textureUnit);
   gl.bindTexture(gl.TEXTURE_2D, texture);
 
+  const halfWidth = textureWidth * 0.5;
+  const halfHeight = textureHeight * 0.5;
+
   const matrix = Mat4.create();
   Mat4.orthoNO(matrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
 
@@ -33,6 +37,10 @@ export function drawImage(
 
   // (dstX, dstY)로 이동
   matrix.translate([dstX, dstY, 0]);
+
+  matrix.translate([halfWidth, halfHeight, 0]);
+  matrix.rotateZ(dstRotation ?? 0);
+  matrix.translate([-halfWidth, -halfHeight, 0]);
 
   // (0~1, 0~1)의 texture space에서 (0~w, 0~h)의 pixel space로 변환
   matrix.scale([dstWidth ?? textureWidth, dstHeight ?? textureHeight, 1]);
@@ -42,8 +50,6 @@ export function drawImage(
 
   const textureMatrix = Mat4.create();
   Mat4.fromScaling(textureMatrix, [1 / textureWidth, 1 / textureHeight, 1]);
-  const halfWidth = textureWidth * 0.5;
-  const halfHeight = textureHeight * 0.5;
   textureMatrix.translate([halfWidth, halfHeight, 0]);
   textureMatrix.rotateZ(srcRotation ?? 0);
   textureMatrix.translate([-halfWidth, -halfHeight, 0]);

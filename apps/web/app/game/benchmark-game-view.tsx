@@ -24,6 +24,7 @@ export function GameView() {
             x: Math.random() * context.stageWidth,
             y: Math.random() * context.stageHeight,
           },
+          rotation: 0,
           scale: {
             x: scale,
             y: scale,

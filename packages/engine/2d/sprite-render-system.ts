@@ -18,6 +18,7 @@ export function createSpriteRenderSystem(
       const dstY = transform.position.y;
       const dstWidth = sprite.textureInfo.width * transform.scale.x;
       const dstHeight = sprite.textureInfo.height * transform.scale.y;
+      const dstRotation = transform.rotation;
       const srcX = 0;
       const srcY = 0;
       const srcWidth = sprite.textureInfo.width * sprite.width;
@@ -34,6 +35,7 @@ export function createSpriteRenderSystem(
         dstY,
         dstWidth,
         dstHeight,
+        dstRotation,
         srcX,
         srcY,
         srcWidth,

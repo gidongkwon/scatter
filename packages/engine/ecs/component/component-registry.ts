@@ -23,6 +23,15 @@ export class ComponentRegistry {
     return this.#idToBags.get(componetId);
   };
 
+  getAllFor = (entity: Entity) => {
+    const result = [];
+    for (const [_, bag] of this.#idToBags) {
+      if (!bag.has(entity)) continue;
+      result.push(bag.get(entity));
+    }
+    return result;
+  };
+
   removeEntity = (entity: Entity) => {
     for (const [_, bag] of this.#idToBags) {
       bag.remove(entity);

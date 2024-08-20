@@ -4,9 +4,7 @@ export interface Transform {
     x: number;
     y: number;
   };
-  // rotation: {
-
-  // },
+  rotation: number;
   scale: {
     x: number;
     y: number;

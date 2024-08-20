@@ -19,8 +19,9 @@ type JSONCompatible<T> = unknown extends T
 // biome-ignore lint/suspicious/noExplicitAny: <explanation>
 type NotAssignableToJson = bigint | symbol | ((...args: any[]) => any);
 
-// Component is serializable data
-export type Component = JSONValue;
+// TODO
+// biome-ignore lint/suspicious/noExplicitAny: Record<string, any> is temporary. Should be fixed(or named) when implementing component serialization.
+export type Component = JSONValue | Record<string, any>;
 export type ComponentId = number;
 
 export function serialzeComponent<T>(data: JSONCompatible<T>) {
