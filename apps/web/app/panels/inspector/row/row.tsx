@@ -7,9 +7,9 @@ interface Props {
 
 export function Row({ propertyName, children }: Props) {
   return (
-    <li className="flex gap-3">
+    <li className="flex gap-3 items-center">
       <span className="w-24">{propertyName}</span>
-      <div className="min-w-0 break-words">{children}</div>
+      {children}
     </li>
   );
 }

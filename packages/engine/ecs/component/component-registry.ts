@@ -1,6 +1,6 @@
 import { assert } from "../../utils/assert";
 import type { Entity } from "../entity/entity";
-import type { ComponentId } from "./component";
+import type { Component, ComponentId } from "./component";
 import { ComponentBag } from "./component-bag";
 
 export class ComponentRegistry {
@@ -28,6 +28,15 @@ export class ComponentRegistry {
     for (const [_, bag] of this.#idToBags) {
       if (!bag.has(entity)) continue;
       result.push(bag.get(entity));
+    }
+    return result;
+  };
+
+  getAllWithIdFor = (entity: Entity) => {
+    const result: { componentId: ComponentId; component: Component }[] = [];
+    for (const [componentId, bag] of this.#idToBags) {
+      if (!bag.has(entity)) continue;
+      result.push({ componentId, component: bag.get(entity) });
     }
     return result;
   };

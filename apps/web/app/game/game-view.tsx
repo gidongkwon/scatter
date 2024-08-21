@@ -15,19 +15,38 @@ import { ScatterEvent } from "@scatter/engine/ecs/event/event";
 import { toRadian } from "@scatter/engine/math/math";
 import { Timer } from "@scatter/engine/timer/timer";
 import { assert } from "@scatter/engine/utils/assert";
-import { useRef, useState } from "react";
-import { ComponentView } from "~/inspector/component-view";
+import { useEffect, useRef, useState } from "react";
 import { useEngine } from "./use-engine";
+import { InspectorPanel } from "~/panels/inspector/inspector-panel";
+import { PerformancePanel } from "~/panels/performance/performance-panel";
+import { ScenePanel } from "~/panels/scene/scene-panel";
+import type { EntityComponentChangedData } from "@scatter/engine/signal/engine-signals";
 
 export function GameView() {
-  const [selectedEntity, setSelectedEntity] = useState({});
+  const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
+  const [selectedEntityData, setSelectedEntityData] = useState({});
+  const [entities, setEntities] = useState<Entity[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engine = useEngine(canvasRef, (engine) => {
-    engine.signals.entityComponentChanged.register(0, (data) => {
-      setSelectedEntity((before) => ({
-        ...before,
-        [data.componentId]: data.component,
-      }));
+    engine.signals.anyEntitySpawned.register(({ entity }) => {
+      setEntities((before) => {
+        if (before.indexOf(entity) > -1) {
+          console.warn("entity already there:", entity);
+          return before;
+        }
+        return [...before, entity];
+      });
+    });
+
+    engine.signals.anyEntityDespawned.register(({ entity }) => {
+      setEntities((before) => {
+        const index = before.indexOf(entity);
+        if (index > -1) {
+          before.splice(index, 1);
+          return [...before];
+        }
+        return before;
+      });
     });
 
     const playerTexture = engine.assets.loadImage(
@@ -465,26 +484,57 @@ export function GameView() {
     engine.world.addSystem("update", clearOutsideObjectSystem);
   });
 
+  useEffect(() => {
+    if (engine == null || selectedEntity == null) {
+      return;
+    }
+
+    setSelectedEntityData(
+      Object.fromEntries(
+        engine.world
+          .getAllComponentsWithIds(selectedEntity)
+          .map((v) => [v.componentId, v.component]),
+      ),
+    );
+    engine.signals.entityComponentChanged.register(
+      selectedEntity,
+      handleComponentChange,
+    );
+    () => {
+      engine.signals.entityComponentChanged.tryUnregister(
+        selectedEntity,
+        handleComponentChange,
+      );
+    };
+    function handleComponentChange(data: EntityComponentChangedData) {
+      setSelectedEntityData((before) => ({
+        ...before,
+        [data.componentId]: data.component,
+      }));
+    }
+  }, [engine, selectedEntity]);
+
   return (
     <div className="w-full h-full flex gap-3">
+      <aside className="flex flex-col gap-2 h-full">
+        <PerformancePanel
+          averageFPS={engine?.averageFPS ?? 0}
+          aliveEntityCount={engine?.world.entities.alives().length ?? 0}
+        />
+        <ScenePanel
+          entities={entities}
+          onSelectionChange={(entities) => setSelectedEntity(entities[0])}
+        />
+      </aside>
       <canvas ref={canvasRef} className="flex-1 min-w-0">
         No canvas support.
       </canvas>
-      <div className="w-[300px] flex flex-col">
-        <div>Avg. FPS: {engine?.averageFPS.toFixed(2)}</div>
-        <div>Entities: {engine?.world.entities.alives().length}</div>
-        <div>
-          {Object.entries(selectedEntity).map(([componentId, component]) => {
-            return (
-              <ComponentView
-                key={componentId}
-                componentId={Number.parseInt(componentId)}
-                component={component as Component}
-              />
-            );
-          })}
-        </div>
-      </div>
+      <aside className="flex flex-col gap-2 h-full">
+        <InspectorPanel
+          entity={selectedEntity}
+          components={selectedEntityData}
+        />
+      </aside>
     </div>
   );
 }

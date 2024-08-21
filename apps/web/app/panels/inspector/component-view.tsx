@@ -12,8 +12,8 @@ interface Props {
 
 export function ComponentView({ componentId, component }: Props) {
   return (
-    <div className="border-b-gray-200 border-b-2 p-3">
-      <h3 className="font-bold">{componentId}</h3>
+    <li className="p-3 bg-slate-2 rounded-md">
+      <h3 className="font-bold leading-0 mb-2">{componentId}</h3>
       <ul>
         {(() => {
           if (component == null) {
@@ -27,13 +27,15 @@ export function ComponentView({ componentId, component }: Props) {
               }
               return (
                 <Row key={key} propertyName={key}>
-                  {JSON.stringify(value)}
+                  <pre className="break-all">
+                    {JSON.stringify(value, undefined, 2)}
+                  </pre>
                 </Row>
               );
             });
           }
         })()}
       </ul>
-    </div>
+    </li>
   );
 }

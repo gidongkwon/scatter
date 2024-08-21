@@ -54,7 +54,7 @@ export class Quadtree<TData> {
   remove = (object: BoundsWithData<TData>) => {
     const index = this.objects.indexOf(object);
     if (index > -1) {
-      this.objects.splice(index);
+      this.objects.splice(index, 1);
     }
 
     if (this.subNodes != null) {

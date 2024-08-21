@@ -2,13 +2,13 @@ import type { Component, ComponentId } from "../ecs/component/component";
 import type { Entity } from "../ecs/entity/entity";
 import { Signal } from "./signal";
 
-type EntityComponentChangedData = {
+export type EntityComponentChangedData = {
   entity: Entity;
   componentId: ComponentId;
   component: Component;
 };
 
-type EntityDespawnedData = {
+export type EntityData = {
   entity: Entity;
 };
 
@@ -20,6 +20,13 @@ class SignalPerEntity<TData> {
     this._entityToSignal.set(entity, signal);
   };
 
+  tryUnregister = (entity: Entity, handler: (data: TData) => void) => {
+    const index = this._entityToSignal.get(entity)?.handlers.indexOf(handler);
+    if (index != null && index > -1) {
+      this._entityToSignal.get(entity)?.handlers.splice(index, 1);
+    }
+  };
+
   tryEmit = (entity: Entity, data: TData) => {
     this._entityToSignal.get(entity)?.emit(data);
   };
@@ -27,5 +34,6 @@ class SignalPerEntity<TData> {
 
 export class EngineSignals {
   entityComponentChanged = new SignalPerEntity<EntityComponentChangedData>();
-  anyEntityDespawned = new Signal<EntityDespawnedData>();
+  anyEntityDespawned = new Signal<EntityData>();
+  anyEntitySpawned = new Signal<EntityData>();
 }

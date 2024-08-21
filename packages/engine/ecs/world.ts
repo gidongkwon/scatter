@@ -26,8 +26,9 @@ export class World {
   }
 
   addEntity = () => {
-    const entityId = this.entities.create();
-    return entityId;
+    const entity = this.entities.create();
+    this.engine.signals.anyEntitySpawned.emit({ entity });
+    return entity;
   };
 
   removeEntity = (entity: Entity) => {
@@ -67,6 +68,10 @@ export class World {
     return this.components.getAllFor(entity);
   };
 
+  getAllComponentsWithIds = (entity: Entity) => {
+    return this.components.getAllWithIdFor(entity);
+  };
+
   removeComponent = (entity: Entity, componentId: ComponentId) => {
     this.components.get(componentId)?.remove(entity);
   };
@@ -91,7 +96,7 @@ export class World {
     const index = systems.indexOf(system);
     if (index === -1) return;
 
-    systems.splice(index);
+    systems.splice(index, 1);
   };
 
   callInitSystems = () => {
