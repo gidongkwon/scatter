@@ -29,7 +29,6 @@ export class World {
 
   addEntity = (name: string) => {
     const entity = this.entities.create(name);
-    this.engine.signals.anyEntitySpawned.emit({ entity });
     return entity;
   };
 

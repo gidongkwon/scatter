@@ -88,6 +88,7 @@ export class SystemContext {
     for (const idComponent of components) {
       this._world.addComponent(entity, idComponent[0], idComponent[1]);
     }
+    this._engine.signals.anyEntitySpawned.emit({ entity });
   };
 
   despawn = (entityId: EntityId) => {
