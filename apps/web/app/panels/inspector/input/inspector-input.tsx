@@ -27,6 +27,7 @@ export function InspectorInput({
           inputClassName,
         )}
         {...props}
+        readOnly
       />
     </div>
   );
