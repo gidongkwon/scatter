@@ -23,11 +23,11 @@
     --popover-foreground: var(--slate-12);
     --primary: var(--green-9);
     --primary-foreground: var(--slate-1);
-    --secondary: var(--slate-3);
+    --secondary: var(--slate-1);
     --secondary-foreground: var(--green-9);
-    --muted: var(--slate-3);
+    --muted: var(--slate-1);
     --muted-foreground: var(--slate-11);
-    --accent: var(--slate-3);
+    --accent: var(--slate-1);
     --accent-foreground: var(--green-9);
     --destructive: var(--red-9);
     --destructive-foreground: var(--slate-1);
@@ -49,7 +49,7 @@
   }
 
   body {
-    @apply bg-slate-3 text-foreground font-normal text-sm font-sans h-full;
+    @apply bg-slate-4 text-foreground font-normal text-sm font-sans h-full;
   }
 
   /*
