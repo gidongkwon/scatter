@@ -45,7 +45,7 @@ export class Engine {
   run = () => {
     // Init moved to render due to canvas resize delay.
     // this.world.callInitSystems();
-    return requestAnimationFrame(this.step);
+    this._rafHandle = requestAnimationFrame(this.step);
   };
 
   cleanup = () => {

@@ -28,25 +28,16 @@ export function GameView() {
   const [entities, setEntities] = useState<Entity[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engine = useEngine(canvasRef, (engine) => {
+    setEntities([]);
+
     engine.signals.anyEntitySpawned.register(({ entity }) => {
       setEntities((before) => {
-        if (before.indexOf(entity) > -1) {
-          console.warn("entity already there:", entity);
-          return before;
-        }
         return [...before, entity];
       });
     });
 
     engine.signals.anyEntityDespawned.register(({ entity }) => {
-      setEntities((before) => {
-        const index = before.indexOf(entity);
-        if (index > -1) {
-          before.splice(index, 1);
-          return [...before];
-        }
-        return before;
-      });
+      setEntities((entities) => entities.filter((e) => e !== entity));
     });
 
     const playerTexture = engine.assets.loadImage(
@@ -235,9 +226,9 @@ export function GameView() {
       );
     };
 
-    const maxEnemey = 300;
+    const maxEnemey = 600;
     let currentEnemy = 0;
-    const timer = new Timer(0.2, { type: "infinite" });
+    const timer = new Timer(0.03, { type: "infinite" });
     const enemySpawnSystem: System = (context) => {
       timer.tick(context.deltaTime);
       if (timer.segmentFinished) {
@@ -251,8 +242,8 @@ export function GameView() {
             TransformId,
             {
               position: {
-                x: Math.random() * context.stageWidth,
-                y: Math.random() * context.stageHeight,
+                x: Math.random() * (context.stageWidth - 200) + 200,
+                y: Math.random() * (context.stageHeight - 60) + 30,
               },
               rotation: 0,
               scale: {
@@ -269,7 +260,7 @@ export function GameView() {
           [
             BulletShooterId,
             {
-              delayTimer: new Timer(0.5, { type: "once" }),
+              delayTimer: new Timer(0.3, { type: "once" }),
               offset: {
                 x: 0,
                 y: 0,
