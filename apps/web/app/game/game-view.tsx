@@ -498,11 +498,13 @@ export function GameView() {
           .map((v) => [v.componentId, v.component]),
       ),
     );
+
     engine.signals.entityComponentChanged.register(
       selectedEntity,
       handleComponentChange,
     );
-    () => {
+
+    return () => {
       engine.signals.entityComponentChanged.tryUnregister(
         selectedEntity,
         handleComponentChange,
