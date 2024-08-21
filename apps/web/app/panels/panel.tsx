@@ -7,7 +7,7 @@ function PanelConatiner({
 }: { children: ReactNode; className?: string }) {
   return (
     <section
-      className={cn("w-[300px] bg-background p-3 rounded-lg", className)}
+      className={cn("w-[300px] bg-background p-3 rounded-xl", className)}
     >
       {children}
     </section>
