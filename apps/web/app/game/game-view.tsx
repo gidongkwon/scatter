@@ -5,6 +5,10 @@ import {
   type BoundsWithData,
   Quadtree,
 } from "@scatter/engine/collections/quadtree";
+import {
+  // type BoundsWithData,
+  SpatialHash,
+} from "@scatter/engine/collections/spatial-hash";
 import type { Component } from "@scatter/engine/ecs/component/component";
 import {
   read,
@@ -374,20 +378,17 @@ export function GameView() {
       );
     };
 
-    const quadtree = new Quadtree<Entity>(
-      { x: 0, y: 0, width: 1000, height: 1000 },
-      40,
-      0,
-      3,
-    );
+    const hash2d = new SpatialHash();
     engine.signals.anyEntityDespawned.register((data) => {
       if (engine.world.hasComponent(data.entity, ColliderId)) {
-        quadtree.remove(
+        hash2d.remove(
           engine.world.getComponent(data.entity, ColliderId) as Collider,
         );
       }
     });
-    const updateColliderQuadtreeSystem: System = (context) => {
+
+    const updateSpatialHashSystem: System = (context) => {
+      hash2d.reset();
       context.each(
         [read(TransformId), write(ColliderId)],
         (entity, rawComponents) => {
@@ -397,12 +398,40 @@ export function GameView() {
           collider.bounds.y = transform.position.y;
           collider.data = entity;
 
-          quadtree.update(collider);
+          hash2d.insert(collider);
         },
       );
-
-      quadtree.shrinkIfNeeded();
     };
+
+    // const quadtree = new Quadtree<Entity>(
+    //   { x: 0, y: 0, width: 1000, height: 1000 },
+    //   40,
+    //   0,
+    //   3,
+    // );
+    // engine.signals.anyEntityDespawned.register((data) => {
+    //   if (engine.world.hasComponent(data.entity, ColliderId)) {
+    //     quadtree.remove(
+    //       engine.world.getComponent(data.entity, ColliderId) as Collider,
+    //     );
+    //   }
+    // });
+    // const updateColliderQuadtreeSystem: System = (context) => {
+    //   context.each(
+    //     [read(TransformId), write(ColliderId)],
+    //     (entity, rawComponents) => {
+    //       const [transform, collider] = rawComponents as [Transform, Collider];
+
+    //       collider.bounds.x = transform.position.x;
+    //       collider.bounds.y = transform.position.y;
+    //       collider.data = entity;
+
+    //       quadtree.update(collider);
+    //     },
+    //   );
+
+    //   quadtree.shrinkIfNeeded();
+    // };
 
     const queryResult: Set<Collider> = new Set();
     const collisionSystemRequiredComponents = [read(ColliderId)];
@@ -413,10 +442,14 @@ export function GameView() {
           const [collider] = rawComponentsA as [Collider];
 
           queryResult.clear();
-          quadtree.query(collider.bounds, queryResult);
+          // quadtree.query(collider.bounds, queryResult);
+          hash2d.query(collider.bounds, queryResult);
 
           for (const result of queryResult) {
             const entityB = result.data;
+            if (entityA === entityB) {
+              continue;
+            }
             for (const e of context.readEvent("collision")) {
               assert(e instanceof CollisionEvent);
               if (
@@ -471,7 +504,8 @@ export function GameView() {
     engine.world.addSystem("update", enemySpawnSystem);
     engine.world.addSystem("update", enemyShootSystem);
     engine.world.addSystem("update", velocitySystem);
-    engine.world.addSystem("update", updateColliderQuadtreeSystem);
+    // engine.world.addSystem("update", updateColliderQuadtreeSystem);
+    engine.world.addSystem("update", updateSpatialHashSystem);
     engine.world.addSystem("update", collisionSystem);
     engine.world.addSystem("update", scoreSystem);
     engine.world.addSystem("update", clearOutsideObjectSystem);
