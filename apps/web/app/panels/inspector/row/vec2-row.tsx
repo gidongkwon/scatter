@@ -10,7 +10,7 @@ interface Props {
 export function Vec2Row({ propertyName, x, y }: Props) {
   return (
     <Row propertyName={propertyName}>
-      <div className="flex gap-2">
+      <div className="flex gap-1">
         <FloatInput
           className="flex-1"
           displayName={<span className="text-axis-x">X</span>}

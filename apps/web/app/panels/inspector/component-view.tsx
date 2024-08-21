@@ -4,6 +4,8 @@ import type {
 } from "@scatter/engine/ecs/component/component";
 import { Row } from "./row/row";
 import { Vec2Row } from "./row/vec2-row";
+import { FloatInput } from "./input/float-input";
+import { toDegree } from "@scatter/engine/math/math";
 
 interface Props {
   componentId: ComponentId;
@@ -18,10 +20,8 @@ export function ComponentView({
 }: Props) {
   return (
     <li className="p-3 bg-slate-2 rounded-md">
-      <h3 className="font-bold leading-0 mb-2">
-        {componentName.split("/").at(-1)}
-      </h3>
-      <ul>
+      <h3 className="leading-0 mb-2">{componentName.split("/").at(-1)}</h3>
+      <ul className="flex flex-col gap-1">
         {(() => {
           if (component == null) {
             return null;
@@ -29,7 +29,7 @@ export function ComponentView({
           if (typeof component === "object") {
             return Object.entries(component).map(([key, value]) => {
               // TODO: implement component view registry
-              if (key === "position") {
+              if (key === "position" || key === "offset" || key === "scale") {
                 return (
                   <Vec2Row
                     key={key}
@@ -39,9 +39,23 @@ export function ComponentView({
                   />
                 );
               }
+              if (key === "rotation") {
+                return (
+                  <Row key={key} propertyName={key}>
+                    <FloatInput value={toDegree(value)} />
+                  </Row>
+                );
+              }
+              if (key === "score" || key === "width" || key === "height") {
+                return (
+                  <Row key={key} propertyName={key}>
+                    <FloatInput value={value} />
+                  </Row>
+                );
+              }
               return (
                 <Row key={key} propertyName={key}>
-                  <pre className="break-all">
+                  <pre className="break-all text-sm">
                     {JSON.stringify(value, undefined, 2)}
                   </pre>
                 </Row>

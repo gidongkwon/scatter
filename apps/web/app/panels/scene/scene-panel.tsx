@@ -1,9 +1,9 @@
+import type { Engine } from "@scatter/engine";
 import type { Entity } from "@scatter/engine/ecs/entity/entity";
 import { useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { cn } from "~/lib/utils";
 import { Panel } from "../panel";
-import { Engine } from "@scatter/engine";
 
 interface Props {
   engine: Engine | null;
@@ -33,8 +33,8 @@ export function ScenePanel({ entities, engine, onSelectionChange }: Props) {
               <div
                 key={entity}
                 className={cn("flex gap-2 px-3 py-1 text-xs hover:bg-slate-3", {
-                  "bg-iris-6": isSelected,
-                  "hover:bg-iris-7": isSelected,
+                  "bg-plum-6": isSelected,
+                  "hover:bg-plum-7": isSelected,
                 })}
                 onClick={() => handleSelection(entity)}
               >

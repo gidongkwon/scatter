@@ -23,7 +23,7 @@ const config = {
     extend: {
       colors: {
         slate: radixScale("slate"),
-        iris: radixScale("iris"),
+        plum: radixScale("plum"),
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
