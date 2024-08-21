@@ -230,7 +230,7 @@ export function GameView() {
       );
     };
 
-    const maxEnemey = 600;
+    const maxEnemey = 800;
     let currentEnemy = 0;
     const timer = new Timer(0.03, { type: "infinite" });
     const enemySpawnSystem: System = (context) => {
@@ -433,9 +433,11 @@ export function GameView() {
     //   quadtree.shrinkIfNeeded();
     // };
 
+    const collidedEntityCache = new Map<Entity, Set<Entity>>();
     const queryResult: Set<Collider> = new Set();
     const collisionSystemRequiredComponents = [read(ColliderId)];
     const collisionSystem: System = (context) => {
+      collidedEntityCache.clear();
       context.each(
         collisionSystemRequiredComponents,
         (entityA, rawComponentsA) => {
@@ -450,15 +452,19 @@ export function GameView() {
             if (entityA === entityB) {
               continue;
             }
-            for (const e of context.readEvent("collision")) {
-              assert(e instanceof CollisionEvent);
-              if (
-                (e.a === entityA && e.b === entityB) ||
-                (e.b === entityA && e.a === entityB)
-              ) {
-                return;
-              }
+
+            const keyEntity = entityA > entityB ? entityA : entityB;
+            const valueEntity = keyEntity === entityA ? entityB : entityA;
+            if (collidedEntityCache.get(keyEntity)?.has(valueEntity)) {
+              continue;
             }
+
+            let collidedSet = collidedEntityCache.get(keyEntity);
+            if (collidedSet == null) {
+              collidedSet = new Set();
+              collidedEntityCache.set(keyEntity, collidedSet);
+            }
+            collidedSet.add(valueEntity);
             context.createEvent(
               "collision",
               new CollisionEvent(entityA, entityB),
