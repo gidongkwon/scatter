@@ -73,6 +73,7 @@ export class EntityRegistry {
 
     const entity = forgeEntity(idToRecycle, version);
     this.entities[idToRecycle] = entity;
+    this.entityToName.set(entity, name);
 
     return entity;
   };
