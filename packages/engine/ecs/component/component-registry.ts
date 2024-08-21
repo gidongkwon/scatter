@@ -6,10 +6,15 @@ import { ComponentBag } from "./component-bag";
 export class ComponentRegistry {
   #nextComponentId = 0;
   #idToBags: Map<ComponentId, ComponentBag> = new Map();
+  #idToName: Map<ComponentId, string> = new Map();
 
-  register: () => ComponentId = () => {
+  register: (namespacedName: string) => ComponentId = (
+    namespacedName: string,
+  ) => {
+    assert(namespacedName.startsWith("@") && namespacedName.includes("/"));
     const id = this.#nextComponentId;
     this.#idToBags.set(id, new ComponentBag(id));
+    this.#idToName.set(id, namespacedName);
     this.#nextComponentId = id + 1;
     assert(this.#nextComponentId < Number.MAX_SAFE_INTEGER);
     return id;
@@ -23,6 +28,10 @@ export class ComponentRegistry {
     return this.#idToBags.get(componetId);
   };
 
+  getName = (componentId: ComponentId) => {
+    return this.#idToName.get(componentId) ?? "ERROR";
+  };
+
   getAllFor = (entity: Entity) => {
     const result = [];
     for (const [_, bag] of this.#idToBags) {
@@ -33,10 +42,16 @@ export class ComponentRegistry {
   };
 
   getAllWithIdFor = (entity: Entity) => {
-    const result: { componentId: ComponentId; component: Component }[] = [];
+    const result: {
+      componentId: ComponentId;
+      component: Component;
+    }[] = [];
     for (const [componentId, bag] of this.#idToBags) {
       if (!bag.has(entity)) continue;
-      result.push({ componentId, component: bag.get(entity) });
+      result.push({
+        componentId,
+        component: bag.get(entity),
+      });
     }
     return result;
   };

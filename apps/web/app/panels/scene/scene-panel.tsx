@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { Panel } from "../panel";
 import type { Entity } from "@scatter/engine/ecs/entity/entity";
-import { cn } from "~/lib/utils";
+import { useState } from "react";
 import { Virtuoso } from "react-virtuoso";
+import { cn } from "~/lib/utils";
+import { Panel } from "../panel";
 
 interface Props {
   entities: Entity[];

@@ -43,8 +43,8 @@ export class World {
     this.components.removeEntity(entity);
   };
 
-  registerComponent = () => {
-    return this.components.register();
+  registerComponent = (namespacedName: string) => {
+    return this.components.register(namespacedName);
   };
 
   addComponent = (
@@ -64,6 +64,10 @@ export class World {
 
   getComponent = (entity: Entity, componentId: ComponentId) => {
     return this.components.get(componentId)?.get(entity);
+  };
+
+  getComponentName = (componentId: ComponentId) => {
+    return this.components.getName(componentId);
   };
 
   getAllComponents = (entity: Entity) => {

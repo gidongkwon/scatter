@@ -13,14 +13,14 @@ import {
 import type { Entity } from "@scatter/engine/ecs/entity/entity";
 import { ScatterEvent } from "@scatter/engine/ecs/event/event";
 import { toRadian } from "@scatter/engine/math/math";
+import type { EntityComponentChangedData } from "@scatter/engine/signal/engine-signals";
 import { Timer } from "@scatter/engine/timer/timer";
 import { assert } from "@scatter/engine/utils/assert";
 import { useEffect, useRef, useState } from "react";
-import { useEngine } from "./use-engine";
 import { InspectorPanel } from "~/panels/inspector/inspector-panel";
 import { PerformancePanel } from "~/panels/performance/performance-panel";
 import { ScenePanel } from "~/panels/scene/scene-panel";
-import type { EntityComponentChangedData } from "@scatter/engine/signal/engine-signals";
+import { useEngine } from "./use-engine";
 
 export function GameView() {
   const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
@@ -62,21 +62,21 @@ export function GameView() {
     // TODO: implement proper id management system or better component design
     const TransformId = 0;
     const SpriteId = 1;
-    const VelocityId = engine.world.registerComponent();
+    const VelocityId = engine.world.registerComponent("@my/Velocity");
     interface Velocity {
       x: number;
       y: number;
     }
-    const PlayerId = engine.world.registerComponent();
+    const PlayerId = engine.world.registerComponent("@my/Player");
     interface Player {
       score: number;
     }
-    const EnemyId = engine.world.registerComponent();
-    const BulletId = engine.world.registerComponent();
+    const EnemyId = engine.world.registerComponent("@my/Enemy");
+    const BulletId = engine.world.registerComponent("@my/Bullet");
     interface Bullet {
       owner: Entity;
     }
-    const BulletShooterId = engine.world.registerComponent();
+    const BulletShooterId = engine.world.registerComponent("@my/BulletShooter");
     interface BulletShooter {
       delayTimer: Timer;
       offset: {
@@ -84,8 +84,10 @@ export function GameView() {
         y: number;
       };
     }
-    const RemoveOnOutsideId = engine.world.registerComponent();
-    const ColliderId = engine.world.registerComponent();
+    const RemoveOnOutsideId = engine.world.registerComponent(
+      "@my/RemoveOnOutside",
+    );
+    const ColliderId = engine.world.registerComponent("@my/Collider");
     interface Collider extends BoundsWithData<Entity> {}
 
     engine.world.registerEvent("collision");
@@ -533,6 +535,7 @@ export function GameView() {
         <InspectorPanel
           entity={selectedEntity}
           components={selectedEntityData}
+          engine={engine}
         />
       </aside>
     </div>

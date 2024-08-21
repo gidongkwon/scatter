@@ -124,8 +124,8 @@ export class Engine {
   private initDefaultSystems = () => {
     this.world.addSystem("init", createKeyboardSystem(document));
 
-    const Transform = this.world.registerComponent();
-    const Sprite = this.world.registerComponent();
+    const Transform = this.world.registerComponent("@scatter/Transform");
+    const Sprite = this.world.registerComponent("@scatter/Sprite");
     const spriteRenderSystem = createSpriteRenderSystem(
       [Transform, Sprite],
       this,

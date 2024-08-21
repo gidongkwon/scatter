@@ -3,25 +3,23 @@ import { Row } from "./row";
 
 interface Props {
   propertyName: string;
-  vec2: {
-    x: number;
-    y: number;
-  };
+  x: number;
+  y: number;
 }
 
-export function Vec2Row({ propertyName, vec2 }: Props) {
+export function Vec2Row({ propertyName, x, y }: Props) {
   return (
     <Row propertyName={propertyName}>
       <div className="flex gap-2">
         <FloatInput
           className="flex-1"
           displayName={<span className="text-axis-x">X</span>}
-          value={vec2.x}
+          value={x}
         />
         <FloatInput
           className="flex-1"
           displayName={<span className="text-axis-y">Y</span>}
-          value={vec2.y}
+          value={y}
         />
       </div>
     </Row>

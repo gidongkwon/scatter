@@ -1,14 +1,15 @@
 import { bench, describe } from "vitest";
+import { read, write } from "../component/component-access-descriptor";
 import { World } from "../world";
 import { SystemContext } from "./system-context";
 
 const world = new World();
 const systemContext = new SystemContext(world);
-const A = world.registerComponent();
-const B = world.registerComponent();
-const C = world.registerComponent();
-const D = world.registerComponent();
-const E = world.registerComponent();
+const A = world.registerComponent("@scatter/test");
+const B = world.registerComponent("@scatter/test");
+const C = world.registerComponent("@scatter/test");
+const D = world.registerComponent("@scatter/test");
+const E = world.registerComponent("@scatter/test");
 for (let i = 0; i < 100000; i++) {
   const entity = world.addEntity();
   const componentTypes = [A, B, C, D, E].filter(() => Math.random() > 0.3);
@@ -27,7 +28,7 @@ describe("single system", () => {
     () => {
       type Comp = { x: number; y: number };
       systemContext.each(
-        [A, B, C],
+        [read(A), read(B), write(C)],
         (entity, [componentA, componentB, componentC]) => {
           const a = componentA as Comp;
           const b = componentB as Comp;
@@ -49,7 +50,7 @@ describe("multiple system", () => {
     () => {
       type Comp = { x: number; y: number };
       systemContext.each(
-        [A, B, C],
+        [read(A), read(B), write(C)],
         (entity, [componentA, componentB, componentC]) => {
           const a = componentA as Comp;
           const b = componentB as Comp;
@@ -60,7 +61,7 @@ describe("multiple system", () => {
       );
 
       systemContext.each(
-        [A, D, E],
+        [read(A), read(D), write(E)],
         (entity, [componentA, componentD, componentE]) => {
           const a = componentA as Comp;
           const d = componentD as Comp;

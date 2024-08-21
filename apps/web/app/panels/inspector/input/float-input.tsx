@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { InspectorInput } from "./inspector-input";
 import { trimTrailingZero } from "~/lib/utils";
+import { InspectorInput } from "./inspector-input";
 
 interface Props {
   value: number;
