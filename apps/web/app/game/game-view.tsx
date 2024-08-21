@@ -477,6 +477,7 @@ export function GameView() {
     const scoreSystem: System = (context) => {
       for (const event of context.readEvent("collision")) {
         assert(event instanceof CollisionEvent);
+        assert(event.a !== event.b);
         let bulletEntity = event.a;
         let targetEntity = event.b;
         if (!context.hasComponent(bulletEntity, BulletId)) {
@@ -498,7 +499,12 @@ export function GameView() {
           bullet.owner,
           write(PlayerId),
         ) as Player;
-        if (bullet.owner !== targetEntity && scoredPlayerComponent != null) {
+        if (
+          bullet.owner !== targetEntity &&
+          context.hasComponent(targetEntity, EnemyId) &&
+          scoredPlayerComponent != null
+        ) {
+          console.log(context._world.entities.entityToName.get(targetEntity));
           scoredPlayerComponent.score += 1;
           context.despawn(targetEntity);
         }
