@@ -21,6 +21,8 @@ export class World {
   cleanups: SystemCleanup[] = [];
   context: SystemContext;
 
+  isInitSystemsCalled = false;
+
   constructor(private engine: Engine) {
     this.context = new SystemContext(this, this.engine);
   }
@@ -100,6 +102,7 @@ export class World {
   };
 
   callInitSystems = () => {
+    this.isInitSystemsCalled = true;
     const systems = this.systems.get("init");
     if (systems != null) {
       for (const system of systems) {
@@ -117,6 +120,10 @@ export class World {
 
   update = (deltaTime: number) => {
     this.context._updateDeltaTime(deltaTime);
+
+    if (!this.isInitSystemsCalled) {
+      return;
+    }
 
     const systems = this.systems.get("update");
     if (systems != null) {
