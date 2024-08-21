@@ -6,6 +6,7 @@ import { Row } from "./row/row";
 import { Vec2Row } from "./row/vec2-row";
 import { FloatInput } from "./input/float-input";
 import { toDegree } from "@scatter/engine/math/math";
+import { TimerInput } from "./input/timer-input";
 
 interface Props {
   componentId: ComponentId;
@@ -20,7 +21,9 @@ export function ComponentView({
 }: Props) {
   return (
     <li className="p-3 bg-slate-2 rounded-md">
-      <h3 className="leading-0 mb-2">{componentName.split("/").at(-1)}</h3>
+      <h3 className="leading-0 mb-2 text-xs">
+        {componentName.split("/").at(-1)}
+      </h3>
       <ul className="flex flex-col gap-1">
         {(() => {
           if (component == null) {
@@ -37,6 +40,13 @@ export function ComponentView({
                     x={value.x}
                     y={value.y}
                   />
+                );
+              }
+              if (key === "delayTimer") {
+                return (
+                  <Row key={key} propertyName={key}>
+                    <TimerInput timer={value} />
+                  </Row>
                 );
               }
               if (key === "rotation") {

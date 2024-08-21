@@ -4,9 +4,15 @@ import { cn } from "~/lib/utils";
 
 interface Props extends InputProps {
   left?: ReactNode;
+  inputClassName?: string;
 }
 
-export function InspectorInput({ left, className, ...props }: Props) {
+export function InspectorInput({
+  left,
+  className,
+  inputClassName,
+  ...props
+}: Props) {
   return (
     <div
       className={cn(
@@ -16,7 +22,10 @@ export function InspectorInput({ left, className, ...props }: Props) {
     >
       {left}
       <input
-        className="focus-visible:outline-none bg-transparent w-full h-fit"
+        className={cn(
+          "focus-visible:outline-none bg-transparent w-full h-fit",
+          inputClassName,
+        )}
         {...props}
       />
     </div>
