@@ -21,6 +21,7 @@ export class EntityRegistry {
   destoyedEntityPointer: EntityId | null = null;
   nextCapacityTarget = 0;
   entities: Entities = new Uint32Array(0);
+  entityToName: Map<Entity, string> = new Map();
 
   nextEntityId = 0;
 
@@ -39,7 +40,7 @@ export class EntityRegistry {
     );
   };
 
-  create: () => Entity = () => {
+  create: (name: string) => Entity = (name: string) => {
     // Create new one if there's no recylable entity
     if (this.destoyedEntityPointer == null) {
       if (this.nextEntityId === this.nextCapacityTarget) {
@@ -53,6 +54,7 @@ export class EntityRegistry {
       const version = 0;
       const entity = forgeEntity(id, version);
       this.entities[id] = entity;
+      this.entityToName.set(entity, name);
       this.nextEntityId++;
       return entity;
     }
@@ -80,6 +82,8 @@ export class EntityRegistry {
 
     assert(id < this.nextEntityId, "entity id is out of range");
     assert(this.entities[id] === entity, "entity id is invalid");
+
+    this.entityToName.delete(entity);
 
     const nextIdToPoint =
       this.destoyedEntityPointer != null

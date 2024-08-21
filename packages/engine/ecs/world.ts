@@ -27,8 +27,8 @@ export class World {
     this.context = new SystemContext(this, this.engine);
   }
 
-  addEntity = () => {
-    const entity = this.entities.create();
+  addEntity = (name: string) => {
+    const entity = this.entities.create(name);
     this.engine.signals.anyEntitySpawned.emit({ entity });
     return entity;
   };

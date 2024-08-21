@@ -102,7 +102,7 @@ export function GameView() {
     }
 
     engine.world.addSystem("init", (context) => {
-      context.spawn([
+      context.spawn("Player", [
         [
           TransformId,
           {
@@ -185,7 +185,7 @@ export function GameView() {
 
           if (context.keyboard.isPressed("KeyZ")) {
             bulletShooter.delayTimer.reset();
-            context.spawn([
+            context.spawn("Bullet", [
               [
                 SpriteId,
                 {
@@ -246,7 +246,7 @@ export function GameView() {
         }
         currentEnemy += 1;
         const scale = 0.3;
-        context.spawn([
+        context.spawn("Enemy", [
           [
             TransformId,
             {
@@ -306,7 +306,7 @@ export function GameView() {
           }
           bulletShooter.delayTimer.reset();
           const scale = 0.3;
-          context.spawn([
+          context.spawn("Bullet", [
             [
               SpriteId,
               {
@@ -524,6 +524,7 @@ export function GameView() {
           aliveEntityCount={engine?.world.entities.alives().length ?? 0}
         />
         <ScenePanel
+          engine={engine}
           entities={entities}
           onSelectionChange={(entities) => setSelectedEntity(entities[0])}
         />

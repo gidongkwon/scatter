@@ -83,8 +83,8 @@ export class SystemContext {
     }
   }
 
-  spawn = (components: [ComponentId, Component][]) => {
-    const entity = this._world.addEntity();
+  spawn = (name: string, components: [ComponentId, Component][]) => {
+    const entity = this._world.addEntity(name);
     for (const idComponent of components) {
       this._world.addComponent(entity, idComponent[0], idComponent[1]);
     }
