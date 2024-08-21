@@ -1,8 +1,8 @@
 import type { Timer } from "@scatter/engine/timer/timer";
-import { FloatInput } from "./float-input";
 import { cn } from "~/lib/utils";
-import { BooleanInput } from "./boolean-input";
 import { Row } from "../row/row";
+import { BooleanInput } from "./boolean-input";
+import { FloatInput } from "./float-input";
 
 interface Props {
   timer: Timer;

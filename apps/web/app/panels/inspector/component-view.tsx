@@ -2,11 +2,11 @@ import type {
   Component,
   ComponentId,
 } from "@scatter/engine/ecs/component/component";
+import { toDegree } from "@scatter/engine/math/math";
+import { FloatInput } from "./input/float-input";
+import { TimerInput } from "./input/timer-input";
 import { Row } from "./row/row";
 import { Vec2Row } from "./row/vec2-row";
-import { FloatInput } from "./input/float-input";
-import { toDegree } from "@scatter/engine/math/math";
-import { TimerInput } from "./input/timer-input";
 
 interface Props {
   componentId: ComponentId;
