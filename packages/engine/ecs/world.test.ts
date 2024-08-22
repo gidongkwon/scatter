@@ -1,8 +1,9 @@
+import { EngineSignals } from "signal/engine-signals";
 import { expect, test } from "vitest";
 import { World } from "./world";
 
 test("addSystem/hasSystem", () => {
-  const world = new World();
+  const world = new World(new EngineSignals());
   let count = 0;
   const system = () => {
     count++;
@@ -13,7 +14,7 @@ test("addSystem/hasSystem", () => {
 });
 
 test("removeSystem", () => {
-  const world = new World();
+  const world = new World(new EngineSignals());
   const system = () => {};
   expect(world.hasSystem("update", system)).toBe(false);
   world.addSystem("update", system);
@@ -23,13 +24,15 @@ test("removeSystem", () => {
 });
 
 test("update", () => {
-  const world = new World();
+  const world = new World(new EngineSignals());
   let count = 0;
   const system = () => {
     count++;
   };
 
   world.addSystem("update", system);
+  world.callInitSystems();
+
   world.update(0);
   world.update(0);
   world.update(0);

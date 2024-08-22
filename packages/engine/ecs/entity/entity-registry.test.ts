@@ -5,11 +5,11 @@ import { EntityRegistry } from "./entity-registry";
 test("add/id increment", () => {
   const entityRegistry = new EntityRegistry();
 
-  let entity = entityRegistry.create();
+  let entity = entityRegistry.create("");
   expect(extractEntityId(entity)).toStrictEqual(0);
   expect(extractEntityVersion(entity)).toStrictEqual(0);
 
-  entity = entityRegistry.create();
+  entity = entityRegistry.create("");
   expect(extractEntityId(entity)).toStrictEqual(1);
   expect(extractEntityVersion(entity)).toStrictEqual(0);
 
@@ -26,10 +26,10 @@ test("add/id increment", () => {
 test("remove", () => {
   const entityRegistry = new EntityRegistry();
 
-  const entity0 = entityRegistry.create();
-  const entity1 = entityRegistry.create();
-  const entity2 = entityRegistry.create();
-  const entity3 = entityRegistry.create();
+  const entity0 = entityRegistry.create("");
+  const entity1 = entityRegistry.create("");
+  const entity2 = entityRegistry.create("");
+  const entity3 = entityRegistry.create("");
 
   entityRegistry.remove(entity1);
   expect(entityRegistry.destoyedEntityPointer).toEqual(entity1);
@@ -58,7 +58,7 @@ test("remove", () => {
 
 test("remove already removed one", () => {
   const entityRegistry = new EntityRegistry();
-  const entity0 = entityRegistry.create();
+  const entity0 = entityRegistry.create("");
   entityRegistry.remove(entity0);
   expect(() => {
     entityRegistry.remove(entity0);
@@ -68,12 +68,12 @@ test("remove already removed one", () => {
 test("recycle one", () => {
   const entityRegistry = new EntityRegistry();
 
-  const entity0 = entityRegistry.create();
+  const entity0 = entityRegistry.create("");
   entityRegistry.remove(entity0);
   expect(entityRegistry.destoyedEntityPointer).toEqual(0);
   expect(entityRegistry.toString()).toEqual("[(END|v1)]");
 
-  entityRegistry.create();
+  entityRegistry.create("");
   expect(entityRegistry.destoyedEntityPointer).toBeNull();
   expect(entityRegistry.toString()).toEqual("[(0|v1)]");
 });
@@ -81,16 +81,16 @@ test("recycle one", () => {
 test("recycle multiple", () => {
   const entityRegistry = new EntityRegistry();
 
-  entityRegistry.create();
-  const entity1 = entityRegistry.create();
-  const entity2 = entityRegistry.create();
-  entityRegistry.create();
+  entityRegistry.create("");
+  const entity1 = entityRegistry.create("");
+  const entity2 = entityRegistry.create("");
+  entityRegistry.create("");
 
   entityRegistry.remove(entity1);
   entityRegistry.remove(entity2);
 
-  entityRegistry.create();
-  entityRegistry.create();
+  entityRegistry.create("");
+  entityRegistry.create("");
 
   const alives = entityRegistry.alives();
   const aliveEntityIds = alives.map(extractEntityId);
@@ -103,17 +103,17 @@ test("recycle multiple", () => {
 test("alives/version spread", () => {
   const entityRegistry = new EntityRegistry();
   for (let i = 0; i < 10; i++) {
-    entityRegistry.create();
+    entityRegistry.create("");
   }
   for (let i = 0; i < 10; i++) {
     entityRegistry.remove(i);
   }
   for (let i = 0; i < 100; i++) {
-    const entity = entityRegistry.create();
+    const entity = entityRegistry.create("");
     entityRegistry.remove(entity);
   }
 
-  const entity = entityRegistry.create();
+  const entity = entityRegistry.create("");
   expect(entityRegistry.alives().length).toEqual(1);
   expect(extractEntityVersion(entity)).toEqual(101);
 });
@@ -121,7 +121,7 @@ test("alives/version spread", () => {
 test("version wrap", () => {
   const entityRegistry = new EntityRegistry();
   for (let i = 0; i < 10; i++) {
-    entityRegistry.create();
+    entityRegistry.create("");
   }
   for (let i = 0; i < 10; i++) {
     entityRegistry.remove(i);
@@ -129,11 +129,11 @@ test("version wrap", () => {
 
   for (let x = 0; x < 5; x++) {
     for (let y = 0; y <= VERSION_MAX; y++) {
-      const entity = entityRegistry.create();
+      const entity = entityRegistry.create("");
       entityRegistry.remove(entity);
     }
   }
 
-  const entity = entityRegistry.create();
+  const entity = entityRegistry.create("");
   expect(extractEntityVersion(entity)).toEqual(1);
 });

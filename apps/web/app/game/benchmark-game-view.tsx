@@ -1,5 +1,9 @@
 import type { Sprite } from "@scatter/engine/2d/sprite";
 import type { Transform } from "@scatter/engine/2d/transform";
+import {
+  read,
+  write,
+} from "@scatter/engine/ecs/component/component-access-descriptor";
 import { useRef } from "react";
 import { useEngine } from "./use-engine";
 
@@ -35,11 +39,9 @@ export function GameView() {
           height: 1,
           textureInfo: textures[(Math.random() * 3) | 0],
         };
-        context.spawn([
-          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-          [TransformId, transform] as any,
-          // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-          [SpriteId, sprite] as any,
+        context.spawn("Entity", [
+          [TransformId, transform],
+          [SpriteId, sprite],
           [
             2,
             {
@@ -52,14 +54,14 @@ export function GameView() {
     });
 
     // test for dxdy
-    const DxDyId = engine.world.registerComponent();
+    const DxDyId = engine.world.registerComponent("@my/DxDy");
 
     engine.world.addSystem("update", (context) => {
       const deltaTime = context.deltaTime;
       const speed = 120;
 
       context.each(
-        [TransformId, SpriteId, DxDyId],
+        [write(TransformId), read(SpriteId), write(DxDyId)],
         (_, [rawTransform, rawSprite, rawDxDy]) => {
           const transform = rawTransform as unknown as Transform;
           const sprite = rawSprite as unknown as Sprite;

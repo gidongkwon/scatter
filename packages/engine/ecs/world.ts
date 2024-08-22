@@ -1,4 +1,4 @@
-import type { Engine } from "../engine";
+import type { EngineSignals } from "signal/engine-signals";
 import { assert } from "../utils/assert";
 import type { Component, ComponentId } from "./component/component";
 import { ComponentRegistry } from "./component/component-registry";
@@ -23,8 +23,8 @@ export class World {
 
   isInitSystemsCalled = false;
 
-  constructor(private engine: Engine) {
-    this.context = new SystemContext(this, this.engine);
+  constructor(private _signals: EngineSignals) {
+    this.context = new SystemContext(this, this._signals);
   }
 
   addEntity = (name: string) => {
@@ -37,7 +37,7 @@ export class World {
       return;
     }
     // call this signal before cleanup to handle with remaining data.
-    this.engine.signals.anyEntityDespawned.emit({ entity });
+    this._signals.anyEntityDespawned.emit({ entity });
     this.entities.remove(entity);
     this.components.removeEntity(entity);
   };
@@ -54,7 +54,7 @@ export class World {
     assert(this.components.has(componentId));
     this.components.get(componentId)?.add(entity, component);
     // TODO: decide signal's container
-    this.engine.signals.entityComponentChanged.tryEmit(entity, {
+    this._signals.entityComponentChanged.tryEmit(entity, {
       entity,
       componentId,
       component,

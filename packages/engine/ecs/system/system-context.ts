@@ -1,4 +1,4 @@
-import type { Engine } from "../../engine";
+import type { EngineSignals } from "signal/engine-signals";
 import { Keyboard } from "../../input/keyboard";
 import { assert } from "../../utils/assert";
 import type { Component, ComponentId } from "../component/component";
@@ -22,7 +22,7 @@ export class SystemContext {
 
   constructor(
     public _world: World,
-    public _engine: Engine,
+    private _signals: EngineSignals,
   ) {}
 
   /**
@@ -71,7 +71,7 @@ export class SystemContext {
             continue;
           }
 
-          this._engine.signals.entityComponentChanged.tryEmit(entity, {
+          this._signals.entityComponentChanged.tryEmit(entity, {
             entity,
             componentId: descriptor.componentId,
             component: this._world.components
@@ -88,7 +88,7 @@ export class SystemContext {
     for (const idComponent of components) {
       this._world.addComponent(entity, idComponent[0], idComponent[1]);
     }
-    this._engine.signals.anyEntitySpawned.emit({ entity });
+    this._signals.anyEntitySpawned.emit({ entity });
   };
 
   despawn = (entityId: EntityId) => {

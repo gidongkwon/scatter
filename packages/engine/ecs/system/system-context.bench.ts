@@ -1,17 +1,17 @@
+import { EngineSignals } from "signal/engine-signals";
 import { bench, describe } from "vitest";
 import { read, write } from "../component/component-access-descriptor";
 import { World } from "../world";
-import { SystemContext } from "./system-context";
 
-const world = new World();
-const systemContext = new SystemContext(world);
+const world = new World(new EngineSignals());
+const systemContext = world.context;
 const A = world.registerComponent("@scatter/test");
 const B = world.registerComponent("@scatter/test");
 const C = world.registerComponent("@scatter/test");
 const D = world.registerComponent("@scatter/test");
 const E = world.registerComponent("@scatter/test");
 for (let i = 0; i < 100000; i++) {
-  const entity = world.addEntity();
+  const entity = world.addEntity("");
   const componentTypes = [A, B, C, D, E].filter(() => Math.random() > 0.3);
 
   for (const componentId of componentTypes) {

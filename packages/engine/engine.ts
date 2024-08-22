@@ -30,7 +30,7 @@ export class Engine {
   private _rafHandle = 0;
 
   constructor(canvas: HTMLCanvasElement) {
-    this.world = new World(this);
+    this.world = new World(this.signals);
     const context = canvas.getContext("webgl2", { alpha: false });
     if (!context) {
       throw new Error("WebGL2 is not available.");

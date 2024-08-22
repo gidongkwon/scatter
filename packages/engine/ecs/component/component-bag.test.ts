@@ -6,8 +6,8 @@ test("add/has", () => {
   const entityRegistry = new EntityRegistry();
   const bag = new ComponentBag(0);
 
-  const entity0 = entityRegistry.create();
-  const entity1 = entityRegistry.create();
+  const entity0 = entityRegistry.create("");
+  const entity1 = entityRegistry.create("");
 
   bag.add(entity0, { x: 0 });
 
@@ -38,8 +38,8 @@ test("remove/get/length", () => {
   const entityRegistry = new EntityRegistry();
   const bag = new ComponentBag(0);
 
-  const entity0 = entityRegistry.create();
-  const entity1 = entityRegistry.create();
+  const entity0 = entityRegistry.create("");
+  const entity1 = entityRegistry.create("");
 
   bag.add(entity0, { x: 0 });
 
