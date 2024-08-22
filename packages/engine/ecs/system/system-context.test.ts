@@ -1,8 +1,7 @@
-import { read } from "ecs/component/component-access-descriptor";
-import { EngineSignals } from "signal/engine-signals";
 import { expect, test } from "vitest";
+import { EngineSignals } from "../../signal/engine-signals";
+import { read } from "../component/component-access-descriptor";
 import { World } from "../world";
-import { SystemContext } from "./system-context";
 
 test("each", () => {
   const world = new World(new EngineSignals());

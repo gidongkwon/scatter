@@ -1,5 +1,7 @@
 import type { Component, ComponentId } from "../ecs/component/component";
 import type { Entity } from "../ecs/entity/entity";
+import type { System } from "../ecs/system/system";
+import type { Script } from "../script/script";
 import { Signal } from "./signal";
 
 export type EntityComponentChangedData = {
@@ -10,6 +12,15 @@ export type EntityComponentChangedData = {
 
 export type EntityData = {
   entity: Entity;
+};
+
+export type ScriptData = {
+  script: Script;
+};
+
+export type ScriptUpdatedData = {
+  script: Script;
+  prevSystem: System;
 };
 
 class SignalPerEntity<TData> {
@@ -36,4 +47,7 @@ export class EngineSignals {
   entityComponentChanged = new SignalPerEntity<EntityComponentChangedData>();
   anyEntityDespawned = new Signal<EntityData>();
   anyEntitySpawned = new Signal<EntityData>();
+  scriptAdded = new Signal<ScriptData>();
+  scriptUpdated = new Signal<ScriptUpdatedData>();
+  scriptRemoved = new Signal<ScriptData>();
 }

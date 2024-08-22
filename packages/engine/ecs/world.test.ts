@@ -1,5 +1,5 @@
-import { EngineSignals } from "signal/engine-signals";
 import { expect, test } from "vitest";
+import { EngineSignals } from "../signal/engine-signals";
 import { World } from "./world";
 
 test("addSystem/hasSystem", () => {

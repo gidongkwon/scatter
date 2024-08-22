@@ -1,22 +1,18 @@
-import type { EngineSignals } from "signal/engine-signals";
+import type { EngineSignals } from "../signal/engine-signals";
 import { assert } from "../utils/assert";
 import type { Component, ComponentId } from "./component/component";
+import { read, write } from "./component/component-access-descriptor";
 import { ComponentRegistry } from "./component/component-registry";
 import type { Entity } from "./entity/entity";
 import { EntityRegistry } from "./entity/entity-registry";
 import type { EventName, ScatterEvent } from "./event/event";
-import type {
-  System,
-  SystemCleanup,
-  SystemPhase,
-  SystemWithEffect,
-} from "./system/system";
+import type { System, SystemCleanup, SystemPhase } from "./system/system";
 import { SystemContext } from "./system/system-context";
 
 export class World {
   components: ComponentRegistry = new ComponentRegistry();
   entities: EntityRegistry = new EntityRegistry();
-  systems: Map<SystemPhase, (System | SystemWithEffect)[]> = new Map();
+  systems: Map<SystemPhase, System[]> = new Map();
   eventQueues: Map<EventName, ScatterEvent[]> = new Map();
   cleanups: SystemCleanup[] = [];
   context: SystemContext;
@@ -25,6 +21,15 @@ export class World {
 
   constructor(private _signals: EngineSignals) {
     this.context = new SystemContext(this, this._signals);
+
+    this._signals.scriptAdded.register(({ script }) => {
+      this.addSystem(script.phase, script.system);
+    });
+
+    this._signals.scriptUpdated.register(({ script, prevSystem }) => {
+      this.removeSystem(script.phase, prevSystem);
+      this.addSystem(script.phase, script.system);
+    });
   }
 
   addEntity = (name: string) => {
@@ -53,7 +58,6 @@ export class World {
   ) => {
     assert(this.components.has(componentId));
     this.components.get(componentId)?.add(entity, component);
-    // TODO: decide signal's container
     this._signals.entityComponentChanged.tryEmit(entity, {
       entity,
       componentId,
@@ -85,7 +89,7 @@ export class World {
     return this.components.get(componentId)?.has(entity) ?? false;
   };
 
-  addSystem = (phase: SystemPhase, system: System | SystemWithEffect) => {
+  addSystem = (phase: SystemPhase, system: System) => {
     const existing = this.systems.get(phase) ?? [];
     this.systems.set(phase, [...existing, system]);
   };
@@ -109,7 +113,7 @@ export class World {
     const systems = this.systems.get("init");
     if (systems != null) {
       for (const system of systems) {
-        const maybeCleanup = system(this.context);
+        const maybeCleanup = system(this.context, read, write);
         if (typeof maybeCleanup === "function") {
           this.cleanups.push(maybeCleanup);
         }
@@ -121,6 +125,18 @@ export class World {
     this.eventQueues.set(name, []);
   };
 
+  callSystems = (systems: System[] | undefined) => {
+    if (systems != null) {
+      for (const system of systems) {
+        try {
+          system(this.context, read, write);
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
+  };
+
   update = (deltaTime: number) => {
     this.context._updateDeltaTime(deltaTime);
 
@@ -128,24 +144,14 @@ export class World {
       return;
     }
 
-    const systems = this.systems.get("update");
-    if (systems != null) {
-      for (const system of systems) {
-        system(this.context);
-      }
-    }
+    this.callSystems(this.systems.get("update"));
 
     // TODO: find out whether to move event stuff to engine
     this.clearEventQueues();
   };
 
   render = () => {
-    const systems = this.systems.get("render");
-    if (systems != null) {
-      for (const system of systems) {
-        system(this.context);
-      }
-    }
+    this.callSystems(this.systems.get("render"));
   };
 
   cleanup = () => {

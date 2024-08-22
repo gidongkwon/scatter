@@ -1,5 +1,5 @@
-import { EngineSignals } from "signal/engine-signals";
 import { bench, describe } from "vitest";
+import { EngineSignals } from "../../signal/engine-signals";
 import { read, write } from "../component/component-access-descriptor";
 import { World } from "../world";
 

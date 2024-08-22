@@ -1,5 +1,5 @@
-import type { EngineSignals } from "signal/engine-signals";
 import { Keyboard } from "../../input/keyboard";
+import type { EngineSignals } from "../../signal/engine-signals";
 import { assert } from "../../utils/assert";
 import type { Component, ComponentId } from "../component/component";
 import type { ComponentAccessDescriptor } from "../component/component-access-descriptor";

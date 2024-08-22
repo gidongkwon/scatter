@@ -4,6 +4,7 @@ import { createSpriteRenderSystem } from "./2d/sprite-render-system";
 import { Assets } from "./assets";
 import { World } from "./ecs/world";
 import { createKeyboardSystem } from "./input/keyboard";
+import { ScriptRegistry } from "./script/script-registry";
 import { EngineSignals } from "./signal/engine-signals";
 import { resizeCanvasToDisplaySize } from "./utils/canvas";
 
@@ -14,6 +15,7 @@ export class Engine {
   gl: WebGL2RenderingContext;
   assets: Assets;
   signals: EngineSignals = new EngineSignals();
+  scripts: ScriptRegistry = new ScriptRegistry(this.signals);
 
   // renderer
   programInfo!: ProgramInfo;

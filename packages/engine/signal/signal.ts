@@ -8,6 +8,13 @@ export class Signal<
     this.handlers.push(handler);
   };
 
+  unregister = (handler: THandler) => {
+    const index = this.handlers.indexOf(handler);
+    if (index > -1) {
+      this.handlers.splice(index, 1);
+    }
+  };
+
   emit = (data: TData) => {
     for (const handler of this.handlers) {
       handler(data);

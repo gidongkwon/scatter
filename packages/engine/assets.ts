@@ -1,4 +1,5 @@
 export interface TextureInfo {
+  url: string;
   width: number;
   height: number;
   texture: WebGLTexture;
@@ -37,6 +38,7 @@ export class Assets {
     );
 
     const textureInfo: TextureInfo = {
+      url,
       width: 1,
       height: 1,
       texture,

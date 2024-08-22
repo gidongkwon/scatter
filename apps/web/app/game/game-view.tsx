@@ -21,6 +21,7 @@ import type { EntityComponentChangedData } from "@scatter/engine/signal/engine-s
 import { Timer } from "@scatter/engine/timer/timer";
 import { assert } from "@scatter/engine/utils/assert";
 import { useEffect, useRef, useState } from "react";
+import { ScriptPanel } from "~/game-editor/script/script-panel";
 import { InspectorPanel } from "~/panels/inspector/inspector-panel";
 import { PerformancePanel } from "~/panels/performance/performance-panel";
 import { ScenePanel } from "~/panels/scene/scene-panel";
@@ -142,28 +143,28 @@ export function GameView() {
       ]);
     });
 
-    const playerMoveSystem: System = (context) => {
-      context.each(
-        [write(TransformId), read(SpriteId), read(PlayerId)],
-        (_, rawComponents) => {
-          const [transform] = rawComponents as [Transform];
+    // const playerMoveSystem: System = (context) => {
+    //   context.each(
+    //     [write(TransformId), read(SpriteId), read(PlayerId)],
+    //     (_, rawComponents) => {
+    //       const [transform] = rawComponents as [Transform];
 
-          const speed = 300;
-          if (context.keyboard.isPressed("ArrowLeft")) {
-            transform.position.x -= speed * context.deltaTime;
-          }
-          if (context.keyboard.isPressed("ArrowRight")) {
-            transform.position.x += speed * context.deltaTime;
-          }
-          if (context.keyboard.isPressed("ArrowUp")) {
-            transform.position.y -= speed * context.deltaTime;
-          }
-          if (context.keyboard.isPressed("ArrowDown")) {
-            transform.position.y += speed * context.deltaTime;
-          }
-        },
-      );
-    };
+    //       const speed = 300;
+    //       if (context.keyboard.isPressed("ArrowLeft")) {
+    //         transform.position.x -= speed * context.deltaTime;
+    //       }
+    //       if (context.keyboard.isPressed("ArrowRight")) {
+    //         transform.position.x += speed * context.deltaTime;
+    //       }
+    //       if (context.keyboard.isPressed("ArrowUp")) {
+    //         transform.position.y -= speed * context.deltaTime;
+    //       }
+    //       if (context.keyboard.isPressed("ArrowDown")) {
+    //         transform.position.y += speed * context.deltaTime;
+    //       }
+    //     },
+    //   );
+    // };
 
     const playerShootSystem: System = (context) => {
       context.each(
@@ -230,7 +231,8 @@ export function GameView() {
       );
     };
 
-    const maxEnemey = 800;
+    // const maxEnemey = 800;
+    const maxEnemey = 300;
     let currentEnemy = 0;
     const timer = new Timer(0.03, { type: "infinite" });
     const enemySpawnSystem: System = (context) => {
@@ -511,7 +513,7 @@ export function GameView() {
       }
     };
 
-    engine.world.addSystem("update", playerMoveSystem);
+    // engine.world.addSystem("update", playerMoveSystem);
     engine.world.addSystem("update", playerShootSystem);
     engine.world.addSystem("update", enemySpawnSystem);
     engine.world.addSystem("update", enemyShootSystem);
@@ -557,7 +559,7 @@ export function GameView() {
 
   return (
     <div className="w-full h-full flex gap-3">
-      <aside className="flex flex-col gap-2 h-full">
+      <aside className="flex flex-col gap-3 h-full">
         <PerformancePanel
           averageFPS={engine?.averageFPS ?? 0}
           aliveEntityCount={engine?.world.entities.alives().length ?? 0}
@@ -568,10 +570,13 @@ export function GameView() {
           onSelectionChange={(entities) => setSelectedEntity(entities[0])}
         />
       </aside>
-      <canvas ref={canvasRef} className="flex-1 min-w-0">
-        No canvas support.
-      </canvas>
-      <aside className="flex flex-col gap-2 h-full">
+      <main className="flex flex-col gap-3 h-full flex-1 min-w-0 relative">
+        <canvas ref={canvasRef} className="flex-1">
+          No canvas support.
+        </canvas>
+        <ScriptPanel engine={engine} className="w-full absolute bottom-0" />
+      </main>
+      <aside className="flex flex-col gap-3 h-full">
         <InspectorPanel
           entity={selectedEntity}
           components={selectedEntityData}
