@@ -33,6 +33,7 @@ export function ScriptEditor({ script, onChange }: Props) {
   return (
     <Editor
       theme="vs-dark"
+      width="100%"
       height="400px"
       language="typescript"
       defaultValue={script?.content}

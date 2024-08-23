@@ -65,6 +65,10 @@ export class ScriptRegistry {
     this.#nameToScript.delete(name);
   }
 
+  all() {
+    return [...this.#nameToScript.values()];
+  }
+
   tryConvertToFunction(
     content: string,
     onSuccess: (converted: System) => void,

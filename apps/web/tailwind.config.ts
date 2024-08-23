@@ -24,6 +24,8 @@ const config = {
       colors: {
         slate: radixScale("slate"),
         plum: radixScale("plum"),
+        blue: radixScale("blue"),
+        green: radixScale("green"),
         border: "var(--border)",
         input: "var(--input)",
         ring: "var(--ring)",
