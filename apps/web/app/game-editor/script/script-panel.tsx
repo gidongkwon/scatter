@@ -82,9 +82,11 @@ export function ScriptPanel({ engine, className }: Props) {
 
   return (
     <Collapsible asChild>
-      <Panel.Container className={cn("flex-col justify-start", className)}>
-        <CollapsibleTrigger>스크립트</CollapsibleTrigger>
-        <CollapsibleContent className="w-full flex flex-col gap-3 data-[state=open]:mt-2">
+      <Panel.Container className={cn("flex-col justify-start p-0", className)}>
+        <CollapsibleTrigger className="p-3 w-full text-left">
+          스크립트
+        </CollapsibleTrigger>
+        <CollapsibleContent className="w-full flex flex-col gap-3 data-[state=open]:pb-3 data-[state=open]:px-3">
           <ComponentList />
           <section className="flex gap-3">
             <ScriptList

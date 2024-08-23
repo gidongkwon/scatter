@@ -21,14 +21,17 @@
     "@remix-run/react": "^2.11.0",
     "@remix-run/serve": "^2.11.0",
     "@scatter/engine": "workspace:*",
+    "@xyflow/react": "^12.1.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "isbot": "^4.1.0",
+    "jotai": "^2.9.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-virtuoso": "^4.10.1",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zustand": "^4.5.5"
   },
   "devDependencies": {
     "@remix-run/dev": "^2.11.0",

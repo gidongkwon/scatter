@@ -1,4 +1,4 @@
-import type { System } from "@scatter/engine";
+import type { Engine, System } from "@scatter/engine";
 import type { Sprite } from "@scatter/engine/2d/sprite";
 import type { Transform } from "@scatter/engine/2d/transform";
 import {
@@ -9,7 +9,6 @@ import {
   // type BoundsWithData,
   SpatialHash,
 } from "@scatter/engine/collections/spatial-hash";
-import type { Component } from "@scatter/engine/ecs/component/component";
 import {
   read,
   write,
@@ -20,17 +19,26 @@ import { toRadian } from "@scatter/engine/math/math";
 import type { EntityComponentChangedData } from "@scatter/engine/signal/engine-signals";
 import { Timer } from "@scatter/engine/timer/timer";
 import { assert } from "@scatter/engine/utils/assert";
+import { Handle, type NodeProps, Position } from "@xyflow/react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
-import { ScriptPanel } from "~/game-editor/script/script-panel";
-import { InspectorPanel } from "~/panels/inspector/inspector-panel";
-import { PerformancePanel } from "~/panels/performance/performance-panel";
-import { ScenePanel } from "~/panels/scene/scene-panel";
+import {
+  entitiesAtom,
+  selectedEngineAtom,
+  selectedEntityAtom,
+  selectedEntityDataAtom,
+} from "~/game-editor/game-editor-page";
+import { cn, trimTrailingZero } from "~/lib/utils";
 import { useEngine } from "./use-engine";
 
-export function GameView() {
-  const [selectedEntity, setSelectedEntity] = useState<Entity | null>(null);
-  const [selectedEntityData, setSelectedEntityData] = useState({});
-  const [entities, setEntities] = useState<Entity[]>([]);
+/**
+ * Node for react flow
+ */
+export function GameNode({ selected }: NodeProps) {
+  const setSelectedEngine = useSetAtom(selectedEngineAtom);
+  const selectedEntity = useAtomValue(selectedEntityAtom);
+  const setSelectedEntityData = useSetAtom(selectedEntityDataAtom);
+  const setEntities = useSetAtom(entitiesAtom);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engine = useEngine(canvasRef, (engine) => {
     setEntities([]);
@@ -555,34 +563,78 @@ export function GameView() {
         [data.componentId]: data.component,
       }));
     }
-  }, [engine, selectedEntity]);
+  }, [engine, selectedEntity, setSelectedEntityData]);
+
+  useEffect(() => {
+    setSelectedEngine(selected === true ? engine : null);
+  }, [selected, setSelectedEngine, engine]);
 
   return (
-    <div className="w-full h-full flex gap-3">
-      <aside className="flex flex-col gap-3 h-full">
-        <PerformancePanel
-          averageFPS={engine?.averageFPS ?? 0}
-          aliveEntityCount={engine?.world.entities.alives().length ?? 0}
-        />
-        <ScenePanel
-          engine={engine}
-          entities={entities}
-          onSelectionChange={(entities) => setSelectedEntity(entities[0])}
-        />
-      </aside>
-      <main className="flex flex-col gap-3 h-full flex-1 min-w-0 relative">
-        <canvas ref={canvasRef} className="flex-1">
+    <>
+      <Handle type="target" position={Position.Top} />
+      <div
+        className={cn(
+          "flex flex-col gap-3 p-3 bg-slate-2 rounded-lg border-2 border-slate-6",
+          {
+            "border-plum-8": selected,
+          },
+        )}
+      >
+        <header className="flex justify-between">
+          <h3>게임</h3>
+          <Performance engine={engine} />
+        </header>
+        <canvas
+          ref={canvasRef}
+          className="flex-1 nodrag"
+          width={800}
+          height={600}
+        >
           No canvas support.
         </canvas>
-        <ScriptPanel engine={engine} className="w-full absolute bottom-0" />
-      </main>
-      <aside className="flex flex-col gap-3 h-full">
-        <InspectorPanel
-          entity={selectedEntity}
-          components={selectedEntityData}
-          engine={engine}
-        />
-      </aside>
-    </div>
+      </div>
+      <Handle type="source" position={Position.Bottom} />
+    </>
+  );
+}
+
+interface PerformanceProps {
+  engine: Engine | null;
+}
+
+function Performance({ engine }: PerformanceProps) {
+  const [aliveEntityCount, setAliveEntityCount] = useState(0);
+  const [fps, setFPS] = useState(0);
+  const rafHandleRef = useRef(0);
+
+  useEffect(() => {
+    rafHandleRef.current = requestAnimationFrame(updateStates);
+    return () => {
+      cancelAnimationFrame(rafHandleRef.current);
+    };
+    function updateStates() {
+      if (engine == null) {
+        return;
+      }
+      setFPS(engine.averageFPS);
+      setAliveEntityCount(engine.world.entities.alives().length);
+      rafHandleRef.current = requestAnimationFrame(updateStates);
+    }
+  }, [engine]);
+
+  if (engine == null) {
+    return null;
+  }
+  return (
+    <section className="flex gap-3">
+      <div className="flex gap-2">
+        <span className="text-slate-11">FPS</span>
+        <span className="tabular-nums">{trimTrailingZero(fps, 2)}</span>
+      </div>
+      <div className="flex gap-2">
+        <span className="text-slate-11">Entities</span>
+        <span className="tabular-nums">{aliveEntityCount}</span>
+      </div>
+    </section>
   );
 }

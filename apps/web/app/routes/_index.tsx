@@ -1,5 +1,5 @@
 import type { MetaFunction } from "@remix-run/node";
-import { GameView } from "~/game/game-view";
+import { GameEditorPage } from "~/game-editor/game-editor-page";
 
 export const meta: MetaFunction = () => {
   return [
@@ -9,9 +9,5 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Index() {
-  return (
-    <div className="font-sans p-4 flex w-full h-full min-w-0">
-      <GameView />
-    </div>
-  );
+  return <GameEditorPage />;
 }
