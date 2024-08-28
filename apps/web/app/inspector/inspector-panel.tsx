@@ -1,7 +1,7 @@
 import type { Engine } from "@scatter/engine";
 import type { Component } from "@scatter/engine/ecs/component/component";
 import type { Entity } from "@scatter/engine/ecs/entity/entity";
-import { Panel } from "../panel";
+import { Panel } from "~/components/panel";
 import { ComponentView } from "./component-view";
 
 interface Props {

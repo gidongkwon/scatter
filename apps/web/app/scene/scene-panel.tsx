@@ -3,7 +3,7 @@ import type { Entity } from "@scatter/engine/ecs/entity/entity";
 import { useState } from "react";
 import { Virtuoso } from "react-virtuoso";
 import { cn } from "~/lib/utils";
-import { Panel } from "../panel";
+import { Panel } from "../components/panel";
 
 interface Props {
   engine: Engine | null;

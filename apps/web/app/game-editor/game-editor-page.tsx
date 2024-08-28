@@ -14,10 +14,10 @@ import {
 } from "@xyflow/react";
 import { atom, useAtom, useAtomValue } from "jotai";
 import { useCallback, useMemo, useState } from "react";
-import { ScriptPanel } from "~/game-editor/script/script-panel";
+import { ScriptPanel } from "~/script/script-panel";
 import { GameNode } from "~/game/game-node";
-import { InspectorPanel } from "~/panels/inspector/inspector-panel";
-import { ScenePanel } from "~/panels/scene/scene-panel";
+import { InspectorPanel } from "~/inspector/inspector-panel";
+import { ScenePanel } from "~/scene/scene-panel";
 
 export const selectedEngineAtom = atom<Engine | null>(null);
 export const selectedEntityAtom = atom<Entity | null>(null);

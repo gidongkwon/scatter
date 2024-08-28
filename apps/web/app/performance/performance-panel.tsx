@@ -1,5 +1,5 @@
 import { trimTrailingZero } from "~/lib/utils";
-import { Panel } from "../panel";
+import { Panel } from "~/components/panel";
 
 interface Props {
   averageFPS: number;

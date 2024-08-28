@@ -8,7 +8,7 @@ import {
   CollapsibleTrigger,
 } from "~/components/ui/collapsible";
 import { cn } from "~/lib/utils";
-import { Panel } from "~/panels/panel";
+import { Panel } from "~/components/panel";
 import { ComponentList } from "./component-list";
 import { ScriptEditor } from "./script-editor";
 
