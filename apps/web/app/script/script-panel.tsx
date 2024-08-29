@@ -33,30 +33,6 @@ export function ScriptPanel({ engine, className }: Props) {
     engine.signals.scriptRemoved.register(handleScriptRemoved);
     engine.signals.scriptUpdated.register(handleScriptUpdated);
 
-    // for test
-    if (!engine.scripts.has("test")) {
-      engine.scripts.add(
-        "test",
-        "update",
-        `context.each([write(0), read(1), read(3)], (_, [transform]) => {
-  const speed = 300;
-  if (context.keyboard.isPressed("ArrowLeft")) {
-    transform.position.x -= speed * context.deltaTime;
-  }
-  if (context.keyboard.isPressed("ArrowRight")) {
-    transform.position.x += speed * context.deltaTime;
-  }
-  if (context.keyboard.isPressed("ArrowUp")) {
-    transform.position.y -= speed * context.deltaTime;
-  }
-  if (context.keyboard.isPressed("ArrowDown")) {
-    transform.position.y += speed * context.deltaTime;
-  }
-});`,
-        () => {},
-      );
-    }
-
     return () => {
       engine.signals.scriptAdded.unregister(handleScriptAdded);
       engine.signals.scriptRemoved.unregister(handleScriptRemoved);
@@ -86,9 +62,14 @@ export function ScriptPanel({ engine, className }: Props) {
         <CollapsibleTrigger className="p-3 w-full text-left">
           스크립트
         </CollapsibleTrigger>
-        <CollapsibleContent className="w-full flex flex-col gap-3 data-[state=open]:pb-3 data-[state=open]:px-3">
-          <ComponentList />
-          <section className="flex gap-3">
+        <CollapsibleContent className="w-full flex flex-row gap-3 data-[state=open]:pb-3 data-[state=open]:px-3">
+          <ComponentList
+            className="flex-1"
+            componentNames={
+              engine?.world.components.all().map(([id, name]) => name) ?? []
+            }
+          />
+          <section className="flex flex-[3] gap-3">
             <ScriptList
               scripts={scripts}
               selectedScriptName={selectedScriptName}
