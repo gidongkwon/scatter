@@ -20,6 +20,6 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignore": ["entry.client.tsx", "entry.server.tsx"]
+    "ignore": ["entry.client.tsx", "entry.server.tsx", "jtd-typedef.ts"]
   }
 }

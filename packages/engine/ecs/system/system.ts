@@ -6,7 +6,8 @@ import type { SystemContext } from "./system-context";
 
 export type SystemCleanup = () => void;
 
-export type SystemPhase = "init" | "render" | "update";
+export const systemPhases = ["init", "render", "update"] as const;
+export type SystemPhase = (typeof systemPhases)[number];
 export type System = (
   context: SystemContext,
   // functions/data for scripts
