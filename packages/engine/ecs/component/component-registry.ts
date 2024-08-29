@@ -32,6 +32,10 @@ export class ComponentRegistry {
     return this.#idToName.get(componentId) ?? "ERROR";
   };
 
+  all() {
+    return [...this.#idToName.entries()];
+  }
+
   getAllFor = (entity: Entity) => {
     const result = [];
     for (const [_, bag] of this.#idToBags) {
