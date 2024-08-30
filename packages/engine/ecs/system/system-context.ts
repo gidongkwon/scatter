@@ -1,3 +1,4 @@
+import type { Assets } from "../../assets";
 import { Keyboard } from "../../input/keyboard";
 import type { EngineSignals } from "../../signal/engine-signals";
 import { assert } from "../../utils/assert";
@@ -10,7 +11,7 @@ import type { World } from "../world";
 export type EachCallback = (entity: Entity, components: Component[]) => void;
 
 /**
- * A Context for system update.
+ * A context for system update.
  * System should not call some functions directly like addEntity/addComponent,
  * instead of passing world object, we pass this context.
  */
@@ -19,9 +20,10 @@ export class SystemContext {
   stageWidth = 0;
   stageHeight = 0;
   keyboard: Keyboard = new Keyboard();
+  _world: World | null = null;
 
   constructor(
-    public _world: World,
+    public assets: Assets,
     private _signals: EngineSignals,
   ) {}
 
@@ -35,6 +37,9 @@ export class SystemContext {
     componentAccessDescriptors: ComponentAccessDescriptor[],
     callback: EachCallback,
   ) {
+    if (this._world == null) {
+      return;
+    }
     if (componentAccessDescriptors.length === 0) {
       return;
     }
@@ -61,7 +66,7 @@ export class SystemContext {
         callback(
           entity,
           componentIds.map((componentId) =>
-            this._world.components.get(componentId)?.get(entity),
+            this._world?.components.get(componentId)?.get(entity),
           ),
         );
 
@@ -84,6 +89,9 @@ export class SystemContext {
   }
 
   spawn = (name: string, components: [ComponentId, Component][]) => {
+    if (this._world == null) {
+      return;
+    }
     const entity = this._world.addEntity(name);
     for (const idComponent of components) {
       this._world.addComponent(entity, idComponent[0], idComponent[1]);
@@ -92,20 +100,26 @@ export class SystemContext {
   };
 
   despawn = (entityId: EntityId) => {
+    if (this._world == null) {
+      return;
+    }
     this._world.removeEntity(entityId);
   };
 
   createEvent = (name: string, event: ScatterEvent) => {
+    if (this._world == null) {
+      return;
+    }
     assert(this._world.eventQueues.has(name));
     this._world.eventQueues.get(name)?.push(event);
   };
 
   readEvent = (name: string) => {
-    return this._world.eventQueues.get(name) ?? [];
+    return this._world?.eventQueues.get(name) ?? [];
   };
 
   hasComponent = (entity: Entity, componentId: ComponentId) => {
-    return this._world.hasComponent(entity, componentId);
+    return this._world?.hasComponent(entity, componentId) ?? false;
   };
 
   getComponent = (
@@ -115,7 +129,7 @@ export class SystemContext {
     // if (componentAccessDescriptor.type === "write") {
     //   // TODO: enqueue change
     // }
-    return this._world.getComponent(
+    return this._world?.getComponent(
       entity,
       componentAccessDescriptor.componentId,
     );

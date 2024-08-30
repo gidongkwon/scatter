@@ -3,6 +3,7 @@ import type {
   write as makeWrite,
 } from "../component/component-access-descriptor";
 import type { SystemContext } from "./system-context";
+import type { Timer as EngineTimer } from "../../timer/timer";
 
 export type SystemCleanup = () => void;
 
@@ -13,5 +14,6 @@ export type System = (
   // functions/data for scripts
   read: typeof makeRead,
   write: typeof makeWrite,
+  Timer: typeof EngineTimer,
   // biome-ignore lint/suspicious/noConfusingVoidType: void
 ) => SystemCleanup | void;

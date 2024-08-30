@@ -75,7 +75,13 @@ export class ScriptRegistry {
     onError: (error: unknown) => void,
   ) {
     try {
-      const converted = new Function("context", "read", "write", content);
+      const converted = new Function(
+        "context",
+        "read",
+        "write",
+        "Timer",
+        content,
+      );
       onSuccess(converted as System);
     } catch (e) {
       onError(e);

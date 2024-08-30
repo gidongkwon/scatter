@@ -19,6 +19,7 @@ import { toRadian } from "@scatter/engine/math/math";
 import type { EntityComponentChangedData } from "@scatter/engine/signal/engine-signals";
 import { Timer } from "@scatter/engine/timer/timer";
 import { assert } from "@scatter/engine/utils/assert";
+import { tempTestProject } from "@scatter/engine/project/temp-test-project";
 import { Handle, type NodeProps, Position } from "@xyflow/react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useRef, useState } from "react";
@@ -40,28 +41,10 @@ export function GameNode({ selected }: NodeProps) {
   const setSelectedEntityData = useSetAtom(selectedEntityDataAtom);
   const setEntities = useSetAtom(entitiesAtom);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const engine = useEngine(canvasRef, (engine) => {
+  const engine = useEngine(canvasRef, async (engine) => {
     setEntities([]);
 
-    engine.signals.anyEntitySpawned.register(({ entity }) => {
-      setEntities((before) => {
-        return [...before, entity];
-      });
-    });
-
-    engine.signals.anyEntityDespawned.register(({ entity }) => {
-      setEntities((entities) => entities.filter((e) => e !== entity));
-    });
-
-    const playerTexture = engine.assets.loadImage(
-      "/shooter/playerShip1_blue.png",
-    );
-    const enemyTexture = engine.assets.loadImage(
-      "/shooter/playerShip3_red.png",
-    );
-    const playerBulletTexture = engine.assets.loadImage(
-      "/shooter/Lasers/laserBlue01.png",
-    );
+    await engine.loadProject(tempTestProject);
 
     // TODO: implement proper id management system or better component design
     const TransformId = 0;
@@ -94,6 +77,32 @@ export function GameNode({ selected }: NodeProps) {
     const ColliderId = engine.world.registerComponent("@my/Collider");
     interface Collider extends BoundsWithData<Entity> {}
 
+    // biome-ignore lint/style/noNonNullAssertion: TEST
+    engine.loadScene(engine.project!.scenes[0], engine.project!.systems);
+
+    const playerTexture = engine.assets.texture("player-ship");
+    const playerBulletTexture = engine.assets.texture("player-bullet");
+    const enemyTexture = engine.assets.texture("enemy-ship");
+
+    if (
+      playerTexture == null ||
+      playerBulletTexture == null ||
+      enemyTexture == null
+    ) {
+      console.error("텍스쳐 로딩 실패");
+      return;
+    }
+
+    engine.signals.anyEntitySpawned.register(({ entity }) => {
+      setEntities((before) => {
+        return [...before, entity];
+      });
+    });
+
+    engine.signals.anyEntityDespawned.register(({ entity }) => {
+      setEntities((entities) => entities.filter((e) => e !== entity));
+    });
+
     engine.world.registerEvent("collision");
     class CollisionEvent extends ScatterEvent {
       name = "collision";
@@ -105,51 +114,53 @@ export function GameNode({ selected }: NodeProps) {
       }
     }
 
-    engine.world.addSystem("init", (context) => {
-      context.spawn("Player", [
-        [
-          TransformId,
-          {
-            position: {
-              x: 100,
-              y: 100,
-            },
-            rotation: toRadian(180),
-            scale: {
-              x: 0.5,
-              y: 0.5,
-            },
-          } satisfies Transform,
-        ],
-        [
-          SpriteId,
-          { textureInfo: playerTexture, width: 1, height: 1 } satisfies Sprite,
-        ],
-        [PlayerId, { score: 0 } satisfies Player],
-        [
-          BulletShooterId,
-          {
-            delayTimer: new Timer(0.1, { type: "once" }),
-            offset: {
-              x: playerTexture.width / 2,
-              y: playerTexture.height / 2 / 2,
-            },
-          } satisfies BulletShooter,
-        ],
-        [
-          ColliderId,
-          {
-            data: -1,
-            bounds: {
-              x: 0,
-              y: 0,
-              width: playerTexture.width,
-              height: playerTexture.height,
-            },
-          } satisfies Collider,
-        ],
-      ]);
-    });
+    // engine.world.addSystem("init", (context) => {
+    //   const playerTexture = engine.assets.texture("player-ship");
+
+    //   context.spawn("Player", [
+    //     [
+    //       TransformId,
+    //       {
+    //         position: {
+    //           x: 100,
+    //           y: 100,
+    //         },
+    //         rotation: toRadian(180),
+    //         scale: {
+    //           x: 0.5,
+    //           y: 0.5,
+    //         },
+    //       },
+    //     ],
+    //     [
+    //       SpriteId,
+    //       { textureInfo: playerTexture, width: 1, height: 1 },
+    //     ],
+    //     [PlayerId, { score: 0 } satisfies Player],
+    //     [
+    //       BulletShooterId,
+    //       {
+    //         delayTimer: new Timer(0.1, { type: "once" }),
+    //         offset: {
+    //           x: playerTexture.width / 2,
+    //           y: playerTexture.height / 2 / 2,
+    //         },
+    //       },
+    //     ],
+    //     [
+    //       ColliderId,
+    //       {
+    //         data: -1,
+    //         bounds: {
+    //           x: 0,
+    //           y: 0,
+    //           width: playerTexture.width,
+    //           height: playerTexture.height,
+    //         },
+    //       },
+    //     ],
+    //   ]);
+    // });
 
     // const playerMoveSystem: System = (context) => {
     //   context.each(
@@ -514,7 +525,7 @@ export function GameNode({ selected }: NodeProps) {
           context.hasComponent(targetEntity, EnemyId) &&
           scoredPlayerComponent != null
         ) {
-          console.log(context._world.entities.entityToName.get(targetEntity));
+          console.log(context._world?.entities.entityToName.get(targetEntity));
           scoredPlayerComponent.score += 1;
           context.despawn(targetEntity);
         }

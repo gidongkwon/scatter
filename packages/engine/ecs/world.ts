@@ -1,4 +1,5 @@
 import type { EngineSignals } from "../signal/engine-signals";
+import { Timer } from "../timer/timer";
 import { assert } from "../utils/assert";
 import type { Component, ComponentId } from "./component/component";
 import { read, write } from "./component/component-access-descriptor";
@@ -7,7 +8,7 @@ import type { Entity } from "./entity/entity";
 import { EntityRegistry } from "./entity/entity-registry";
 import type { EventName, ScatterEvent } from "./event/event";
 import type { System, SystemCleanup, SystemPhase } from "./system/system";
-import { SystemContext } from "./system/system-context";
+import type { SystemContext } from "./system/system-context";
 
 export class World {
   components: ComponentRegistry = new ComponentRegistry();
@@ -15,13 +16,14 @@ export class World {
   systems: Map<SystemPhase, System[]> = new Map();
   eventQueues: Map<EventName, ScatterEvent[]> = new Map();
   cleanups: SystemCleanup[] = [];
-  context: SystemContext;
 
   isInitSystemsCalled = false;
 
-  constructor(private _signals: EngineSignals) {
-    this.context = new SystemContext(this, this._signals);
-
+  constructor(
+    public context: SystemContext,
+    private _signals: EngineSignals,
+  ) {
+    context._world = this;
     this._signals.scriptAdded.register(({ script }) => {
       this.addSystem(script.phase, script.system);
     });
@@ -113,7 +115,7 @@ export class World {
     const systems = this.systems.get("init");
     if (systems != null) {
       for (const system of systems) {
-        const maybeCleanup = system(this.context, read, write);
+        const maybeCleanup = system(this.context, read, write, Timer);
         if (typeof maybeCleanup === "function") {
           this.cleanups.push(maybeCleanup);
         }
@@ -129,7 +131,7 @@ export class World {
     if (systems != null) {
       for (const system of systems) {
         try {
-          system(this.context, read, write);
+          system(this.context, read, write, Timer);
         } catch (e) {
           console.error(e);
         }
