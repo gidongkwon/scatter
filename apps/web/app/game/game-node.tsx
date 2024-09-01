@@ -77,22 +77,6 @@ export function GameNode({ selected }: NodeProps) {
     const ColliderId = engine.world.registerComponent("@my/Collider");
     interface Collider extends BoundsWithData<Entity> {}
 
-    // biome-ignore lint/style/noNonNullAssertion: TEST
-    engine.loadScene(engine.project!.scenes[0], engine.project!.systems);
-
-    const playerTexture = engine.assets.texture("player-ship");
-    const playerBulletTexture = engine.assets.texture("player-bullet");
-    const enemyTexture = engine.assets.texture("enemy-ship");
-
-    if (
-      playerTexture == null ||
-      playerBulletTexture == null ||
-      enemyTexture == null
-    ) {
-      console.error("텍스쳐 로딩 실패");
-      return;
-    }
-
     engine.signals.anyEntitySpawned.register(({ entity }) => {
       setEntities((before) => {
         return [...before, entity];
@@ -112,6 +96,22 @@ export function GameNode({ selected }: NodeProps) {
       ) {
         super();
       }
+    }
+
+    // biome-ignore lint/style/noNonNullAssertion: TEST
+    engine.loadScene(engine.project!.scenes[0], engine.project!.systems);
+
+    const playerTexture = engine.assets.texture("player-ship");
+    const playerBulletTexture = engine.assets.texture("player-bullet");
+    const enemyTexture = engine.assets.texture("enemy-ship");
+
+    if (
+      playerTexture == null ||
+      playerBulletTexture == null ||
+      enemyTexture == null
+    ) {
+      console.error("텍스쳐 로딩 실패");
+      return;
     }
 
     // engine.world.addSystem("init", (context) => {

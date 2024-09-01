@@ -11,6 +11,7 @@ import { cn } from "~/lib/utils";
 import { Panel } from "~/components/panel";
 import { ComponentList } from "./component-list";
 import { ScriptEditor } from "./script-editor";
+import { systemPhases } from "@scatter/engine/ecs/system/system";
 
 interface Props {
   engine: Engine | null;
@@ -18,10 +19,11 @@ interface Props {
 }
 
 export function ScriptPanel({ engine, className }: Props) {
+  const [scripts, setScripts] = useState<Script[]>([]);
   const [selectedScriptName, setSelectedScriptName] = useState<string | null>(
     null,
   );
-  const [scripts, setScripts] = useState<Script[]>([]);
+  const selectedScript = scripts.find((v) => v.name === selectedScriptName);
 
   useEffect(() => {
     if (engine == null) {
@@ -77,19 +79,19 @@ export function ScriptPanel({ engine, className }: Props) {
                 setSelectedScriptName(name);
               }}
             />
-            {selectedScriptName == null ? (
+            {selectedScript == null ? (
               <div className="h-[400px]">
                 목록에서 스크립트를 선택하거나, 새로 작성하세요.
               </div>
             ) : (
               <ScriptEditor
-                script={scripts.find((v) => v.name === selectedScriptName)}
+                script={selectedScript}
                 onChange={(editingScriptContent) => {
                   if (editingScriptContent == null) {
                     return;
                   }
                   engine?.scripts.update(
-                    "test",
+                    selectedScript.name,
                     editingScriptContent,
                     (error) => {
                       if (error instanceof SyntaxError) {
@@ -120,45 +122,39 @@ function ScriptList({
 }: ScriptListProps) {
   return (
     <div className="flex flex-col gap-3">
-      <section>
-        <h3 className="text-xs font-bold bg-green-6 text-green-12 px-2 py-1 rounded-md w-fit">
-          INIT
-        </h3>
-        <button
-          type="button"
-          className="px-2 py-1 mt-1 w-full rounded-md hover:bg-slate-2 text-center border-2 border-slate-5 border-dashed"
-        >
-          + 스크립트 만들기
-        </button>
-      </section>
-      <section>
-        <h3 className="text-xs font-bold bg-blue-6 text-blue-12 px-2 py-1 rounded-md w-fit">
-          UPDATE
-        </h3>
-        <ul className="w-[200px] mt-1 flex flex-col gap-1">
-          {scripts.map((script) => {
-            return (
-              <li
-                key={script.name}
-                className={cn("px-2 py-1 rounded-md hover:bg-slate-2", {
-                  "bg-slate-3 hover:bg-slate-4":
-                    selectedScriptName === script.name,
-                })}
-              >
-                <button type="button" onClick={() => onSelect(script.name)}>
-                  {script.name}
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-        <button
-          type="button"
-          className="px-2 py-1 mt-1 w-full rounded-md hover:bg-slate-2 text-center border-2 border-slate-5 border-dashed"
-        >
-          + 스크립트 만들기
-        </button>
-      </section>
+      {systemPhases.map((phase) => {
+        const phaseScripts = scripts.filter((s) => s.phase === phase);
+        return (
+          <section key={phase}>
+            <h3 className="text-xs font-bold bg-green-6 text-green-12 px-2 py-1 rounded-md w-fit">
+              {phase.toUpperCase()}
+            </h3>
+            <ul className="w-[200px] mt-1 flex flex-col gap-1">
+              {phaseScripts.map((script) => {
+                return (
+                  <li
+                    key={script.name}
+                    className={cn("px-2 py-1 rounded-md hover:bg-slate-2", {
+                      "bg-slate-3 hover:bg-slate-4":
+                        selectedScriptName === script.name,
+                    })}
+                  >
+                    <button type="button" onClick={() => onSelect(script.name)}>
+                      {script.name}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <button
+              type="button"
+              className="px-2 py-1 mt-1 w-full rounded-md hover:bg-slate-2 text-center border-2 border-slate-5 border-dashed"
+            >
+              + 스크립트 만들기
+            </button>
+          </section>
+        );
+      })}
     </div>
   );
 }

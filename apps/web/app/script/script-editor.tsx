@@ -14,7 +14,7 @@ export function ScriptEditor({ script, onChange }: Props) {
   function handleEditorDidMount(editor: CodeEditor, monaco: Monaco) {
     editorRef.current = editor;
     // test
-    monaco.languages.typescript.typescriptDefaults.addExtraLib(
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
       `
       declare const context: {
         each: Function;
@@ -35,8 +35,8 @@ export function ScriptEditor({ script, onChange }: Props) {
       theme="vs-dark"
       width="100%"
       height="400px"
-      language="typescript"
-      defaultValue={script?.content}
+      language="javascript"
+      value={script?.content}
       onMount={handleEditorDidMount}
       onChange={onChange}
     />
