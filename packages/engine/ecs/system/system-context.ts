@@ -1,4 +1,4 @@
-import type { Assets } from "../../assets";
+import type { Assets } from "../../asset/assets";
 import { Keyboard } from "../../input/keyboard";
 import type { EngineSignals } from "../../signal/engine-signals";
 import { assert } from "../../utils/assert";

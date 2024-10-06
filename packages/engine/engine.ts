@@ -1,7 +1,7 @@
 import { createProgramFromSources } from "./2d/gl";
 import { type ProgramInfo, fragment, vertex } from "./2d/shader";
 import { createSpriteRenderSystem } from "./2d/sprite-render-system";
-import { Assets } from "./assets";
+import { Assets } from "./asset/assets";
 import { World } from "./ecs/world";
 import { createKeyboardSystem } from "./input/keyboard";
 import { ScriptRegistry } from "./script/script-registry";

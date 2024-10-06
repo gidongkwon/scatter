@@ -79,4 +79,8 @@ export class Assets {
   texture = (name: string) => {
     return this.#nameToTexture.get(name);
   };
+
+  textures = () => {
+    return [...this.#nameToTexture.values()];
+  };
 }

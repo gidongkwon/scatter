@@ -1,4 +1,4 @@
-import type { TextureInfo } from "../assets";
+import type { TextureInfo } from "../asset/assets";
 
 // TODO: implement schema
 export interface Sprite {

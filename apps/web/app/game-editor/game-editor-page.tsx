@@ -18,6 +18,8 @@ import { ScriptPanel } from "~/script/script-panel";
 import { GameNode } from "~/game/game-node";
 import { InspectorPanel } from "~/inspector/inspector-panel";
 import { ScenePanel } from "~/scene/scene-panel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { AssetsPanel } from "~/assets/assets-panel";
 
 export const selectedEngineAtom = atom<Engine | null>(null);
 export const selectedEntityAtom = atom<Entity | null>(null);
@@ -98,11 +100,22 @@ export function GameEditorPage() {
           position="top-left"
           className="flex flex-col gap-3 h-[calc(100%-30px)]"
         >
-          <ScenePanel
-            engine={engine}
-            entities={entities}
-            onSelectionChange={(entities) => setSelectedEntity(entities[0])}
-          />
+          <Tabs defaultValue="scene" className="w-full h-full">
+            <TabsList>
+              <TabsTrigger value="scene">Scene</TabsTrigger>
+              <TabsTrigger value="asset">Asset</TabsTrigger>
+            </TabsList>
+            <TabsContent value="scene" className="w-full h-full">
+              <ScenePanel
+                engine={engine}
+                entities={entities}
+                onSelectionChange={(entities) => setSelectedEntity(entities[0])}
+              />
+            </TabsContent>
+            <TabsContent value="asset" className="w-full h-full">
+              {engine?.assets && <AssetsPanel assets={engine.assets} />}
+            </TabsContent>
+          </Tabs>
         </FlowPanel>
         <FlowPanel
           position="bottom-center"

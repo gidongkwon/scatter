@@ -30,17 +30,23 @@ export function ScenePanel({ entities, engine, onSelectionChange }: Props) {
               engine.world.entities.entityToName.get(entity) ?? "Unnamed";
             const isSelected = selectedEntities.indexOf(entity) > -1;
             return (
-              <div
+              <button
+                type="button"
                 key={entity}
                 className={cn("flex gap-2 px-3 py-1 text-xs hover:bg-slate-3", {
                   "bg-plum-6": isSelected,
                   "hover:bg-plum-7": isSelected,
                 })}
                 onClick={() => handleSelection(entity)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    handleSelection(entity);
+                  }
+                }}
               >
                 <span>{entityName}</span>
                 <span className="text-slate-11">{entity}</span>
-              </div>
+              </button>
             );
           }}
         />
